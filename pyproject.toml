@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "pydantic-client"
+version = "0.1.0"
+description = "Http client base pydantic, with requests or aiohttp"
+authors = ["ponytailer <huangxiaohen2738@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "pydantic_client" }]
+homepage = "https://github.com/ponytailer/pydantic-client"
+
+[[tool.poetry.source]]
+name = "tuna"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+pydantic = "*"
+requests = "*"
+aiohttp = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
