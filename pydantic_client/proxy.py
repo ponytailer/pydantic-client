@@ -3,8 +3,6 @@ import logging
 import re
 from typing import Any, Dict
 
-from pydantic import BaseModel
-
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.schema.http_request import HttpRequest
 from pydantic_client.schema.method_info import MethodInfo
@@ -20,9 +18,11 @@ class Proxy:
         self.method_info = method_info
 
     def _apply_args(self, *args, **kwargs) -> Dict[str, Any]:
-        return inspect.getcallargs(
+        f = inspect.getcallargs(
             self.method_info.func, self.instance, *args, **kwargs,
         )
+        f.pop("self", None)
+        return f
 
     def _get_url(self, args) -> str:
         keys = self.querystring_pattern.findall(self.method_info.url)
@@ -41,15 +41,10 @@ class Proxy:
         else:
             data, json = {}, func_args
 
-        if isinstance(data, BaseModel):
-            data = data.model_dump()
-        if isinstance(json, BaseModel):
-            json = json.model_dump()
-
         return HttpRequest(
             url=url,
             data=data,
-            json=json,
+            json_body=json,
             method=self.method_info.http_method
         )
 
@@ -59,7 +54,6 @@ class ClientProxy(Proxy):
     def __call__(self, *args, **kwargs):
         request = self.get_request(*args, **kwargs)
         raw_response = self.instance.do_request(request)
-        print(raw_response)
         return self.method_info.response_type(**raw_response)
 
 
@@ -68,5 +62,4 @@ class AsyncClientProxy(Proxy):
     async def __call__(self, *args, **kwargs):
         request = self.get_request(*args, **kwargs)
         raw_response = await self.instance.do_request(request)
-        print(raw_response)
         return self.method_info.response_type(**raw_response)

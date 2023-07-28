@@ -5,6 +5,6 @@ from pydantic import BaseModel
 
 class HttpRequest(BaseModel):
     data: Optional[Dict] = {}
-    json: Optional[Dict] = {}
+    json_body: Optional[Dict] = {}
     url: str
     method: str

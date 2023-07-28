@@ -12,7 +12,7 @@ class RequestsClient(AbstractClient):
 
     runner_class = ClientProxy
 
-    def __init__(self, session: Session, base_url: str):
+    def __init__(self, base_url: str, session: Session = Session()):
         self.session = session
         self.base_url = base_url
 
@@ -22,7 +22,7 @@ class RequestsClient(AbstractClient):
             json = {}
         else:
             data = {}
-            json = request.json
+            json = request.json_body
 
         try:
             return self.session.request(

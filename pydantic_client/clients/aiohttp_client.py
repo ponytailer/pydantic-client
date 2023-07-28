@@ -1,3 +1,4 @@
+from typing import Any
 from urllib.parse import urljoin
 
 from aiohttp.client import ClientSession
@@ -10,7 +11,7 @@ from pydantic_client.schema.http_request import HttpRequest
 class AIOHttpClient(AbstractClient):
     runner_class = AsyncClientProxy
 
-    def __init__(self, session: ClientSession, base_url: str):
+    def __init__(self, base_url: str, session: ClientSession = ClientSession()):
         self.session = session
         self.base_url = base_url
 
@@ -21,7 +22,7 @@ class AIOHttpClient(AbstractClient):
             json = {}
         else:
             data = {}
-            json = request.json
+            json = request.json_body
 
         async with self.session as session:
             try:
