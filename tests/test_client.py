@@ -1,12 +1,4 @@
-# pydantic-client
-
-Http client base pydantic, with requests or aiohttp
-
-### How to use
-
-```python
-
-
+import unittest
 
 from pydantic import BaseModel
 
@@ -19,6 +11,8 @@ class Book(BaseModel):
 
 
 class R(RequestsClient):
+    def __init__(self):
+        super().__init__("http://localhost")
 
     @get("/books/{book_id}?query={query}")
     def get_book(self, book_id: int, query: str) -> Book:
@@ -39,6 +33,13 @@ class R(RequestsClient):
         ...
 
 
-my_client = R("http://localhost/v1")
-get_book: Book = my_client.get_book(1)
-```
+class TestClient(unittest.TestCase):
+
+    def setUp(self):
+        self.test_client = R()
+
+    def tearDown(self):
+        self.test_client = None
+
+    def test_get(self):
+        ...

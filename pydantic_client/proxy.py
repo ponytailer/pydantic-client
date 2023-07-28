@@ -2,6 +2,7 @@ import inspect
 import logging
 import re
 from typing import Any, Dict
+from urllib.parse import urlparse
 
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.schema.http_request import HttpRequest
@@ -26,16 +27,22 @@ class Proxy:
 
     def _get_url(self, args) -> str:
         keys = self.querystring_pattern.findall(self.method_info.url)
-        query_args = {arg: val for arg, val in args.items() if arg in keys}
-        return self.method_info.url.format(**query_args)
+        query_args = {arg: val for arg, val in args.items() if arg in keys and val}
+        url = self.method_info.url.format(**query_args)
+
+        url_result = urlparse(url)
+        if "{" in url_result.path:
+            logger.warning(f"Not formatted args in url path: {url}")
+
+        querystring = "&".join(
+            f"{k}={v}" for k, v in url_result.query if "{" not in v
+        )
+        return url_result.path + "?" + querystring if querystring else url_result.path
 
     def get_request(self, *args, **kwargs):
         func_args: Dict[str, Any] = self._apply_args(*args, **kwargs)
 
         url: str = self._get_url(func_args)
-        if "{" in url and "}" in url:
-            logger.warning(f"Not formatted args in url: {url}")
-
         if self.method_info.form_body:
             data, json = func_args, {}
         else:
