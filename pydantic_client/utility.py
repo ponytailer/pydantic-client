@@ -1,13 +1,11 @@
 import inspect
-from typing import Any, Callable, Type
+from typing import Any, Callable, Dict, Type
 
 from pydantic_client.schema.method_info import MethodInfo
 
 
-def create_response_type(
-    spec: inspect.FullArgSpec,
-) -> Type:
-    return spec.annotations.get("return", Any)
+def create_response_type(annotations: Dict[str, Any]) -> Type:
+    return annotations.pop("return", Any)
 
 
 def parse_func(
@@ -19,12 +17,12 @@ def parse_func(
 ):
 
     spec = inspect.getfullargspec(func)
-
+    annotations = spec.annotations.copy()
     return MethodInfo(
         func=func,
         http_method=method,
         url=url,
-        request_type=spec.annotations,
-        response_type=create_response_type(spec),
+        request_type=annotations,
+        response_type=create_response_type(annotations),
         form_body=form_body
     )
