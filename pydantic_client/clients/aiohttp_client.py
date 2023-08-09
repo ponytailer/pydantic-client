@@ -1,33 +1,27 @@
-from typing import Any
+from typing import Any, Type
 from urllib.parse import urljoin
 
 from aiohttp.client import ClientSession
 
 from pydantic_client.clients.abstract_client import AbstractClient
-from pydantic_client.proxy import AsyncClientProxy
+from pydantic_client.proxy import AsyncClientProxy, Proxy
 from pydantic_client.schema.http_request import HttpRequest
 
 
 class AIOHttpClient(AbstractClient):
-    runner_class = AsyncClientProxy
+    runner_class: Type[Proxy] = AsyncClientProxy
 
     def __init__(self, base_url: str, session: ClientSession = ClientSession()):
         self.session = session
         self.base_url = base_url
 
     async def do_request(self, request: HttpRequest) -> Any:
-
-        if request.data:
-            data = request.data
-            json = {}
-        else:
-            data = {}
-            json = request.json_body
-
+        data, json = self.parse_request(request)
         async with self.session as session:
             try:
-                req = session.post(
+                req = session.request(
                     url=urljoin(self.base_url, request.url),
+                    method=request.method,
                     json=json,
                     data=data
                 )

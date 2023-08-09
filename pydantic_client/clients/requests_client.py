@@ -1,29 +1,23 @@
-from typing import Any
+from typing import Any, Type
 from urllib.parse import urljoin
 
 from requests import Session
 
 from pydantic_client.clients.abstract_client import AbstractClient
-from pydantic_client.proxy import ClientProxy
+from pydantic_client.proxy import ClientProxy, Proxy
 from pydantic_client.schema.http_request import HttpRequest
 
 
 class RequestsClient(AbstractClient):
 
-    runner_class = ClientProxy
+    runner_class: Type[Proxy] = ClientProxy
 
     def __init__(self, base_url: str, session: Session = Session()):
         self.session = session
         self.base_url = base_url
 
     def do_request(self, request: HttpRequest) -> Any:
-        if request.data:
-            data = request.data
-            json = {}
-        else:
-            data = {}
-            json = request.json_body
-
+        data, json = self.parse_request(request)
         try:
             return self.session.request(
                 url=urljoin(self.base_url, request.url),
