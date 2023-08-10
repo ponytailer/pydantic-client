@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Type
+from typing import Any, Callable, Dict, Optional, Type
 
 from pydantic import BaseModel
 
@@ -10,7 +10,7 @@ class MethodInfo(BaseModel):
     http_method: str
     url: str
     request_type: Dict[str, Any]
-    response_type: Type
+    response_type: Optional[Type]
     form_body: bool
 
     def __get__(self, instance: AbstractClient, objtype=None):
