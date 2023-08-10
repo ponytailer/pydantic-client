@@ -1,5 +1,4 @@
 from typing import Any, Type
-from urllib.parse import urljoin
 
 from requests import Session
 
@@ -20,7 +19,7 @@ class RequestsClient(AbstractClient):
         data, json = self.parse_request(request)
         try:
             return self.session.request(
-                url=urljoin(self.base_url, request.url),
+                url=self.base_url + request.url,
                 method=request.method,
                 json=json,
                 data=data,

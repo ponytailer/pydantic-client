@@ -1,5 +1,4 @@
 from typing import Any, Type
-from urllib.parse import urljoin
 
 from aiohttp.client import ClientSession
 
@@ -20,7 +19,7 @@ class AIOHttpClient(AbstractClient):
         async with self.session as session:
             try:
                 req = session.request(
-                    url=urljoin(self.base_url, request.url),
+                    url=self.base_url + request.url,
                     method=request.method,
                     json=json,
                     data=data
