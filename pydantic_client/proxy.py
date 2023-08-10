@@ -32,7 +32,8 @@ class Proxy:
 
     def _get_url(self, args) -> str:
         keys = self.querystring_pattern.findall(self.method_info.url)
-        query_args = {arg: val for arg, val in args.items() if arg in keys and val}
+        query_args = {arg: args.pop(arg) for arg, val in args.items() if
+            arg in keys and val}
         url = self.method_info.url.format(**query_args)
 
         url_result = urlparse(url)
@@ -44,14 +45,20 @@ class Proxy:
         )
         return url_result.path + "?" + querystring if querystring else url_result.path
 
+    @staticmethod
+    def dict_to_body(func_args: Dict[str, Any]) -> Dict:
+        keys = list(func_args.keys())
+        if len(keys) == 1:
+            return func_args[keys[0]]
+        return {}
+
     def get_request(self, *args, **kwargs):
         func_args: Dict[str, Any] = self._apply_args(*args, **kwargs)
-
         url: str = self._get_url(func_args)
         if self.method_info.form_body:
-            data, json = func_args, {}
+            data, json = self.dict_to_body(func_args), {}
         else:
-            data, json = {}, func_args
+            data, json = {}, self.dict_to_body(func_args)
 
         return HttpRequest(
             url=url,
