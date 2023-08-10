@@ -24,6 +24,6 @@ class RequestsClient(AbstractClient):
                 method=request.method,
                 json=json,
                 data=data,
-            )
+            ).json()
         except BaseException as e:
             raise e
