@@ -4,6 +4,8 @@ import re
 from typing import Any, Dict
 from urllib.parse import urlparse
 
+from pydantic import BaseModel
+
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.schema.http_request import HttpRequest
 from pydantic_client.schema.method_info import MethodInfo
@@ -23,6 +25,9 @@ class Proxy:
             self.method_info.func, self.instance, *args, **kwargs,
         )
         f.pop("self", None)
+        for key, value in f.items():
+            if isinstance(value, BaseModel):
+                f[key] = value.model_dump()
         return f
 
     def _get_url(self, args) -> str:
