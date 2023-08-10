@@ -61,7 +61,9 @@ class ClientProxy(Proxy):
     def __call__(self, *args, **kwargs):
         request = self.get_request(*args, **kwargs)
         raw_response = self.instance.do_request(request)
-        return self.method_info.response_type(**raw_response)
+        if self.method_info.response_type:
+            return self.method_info.response_type(**raw_response)
+        return raw_response
 
 
 class AsyncClientProxy(Proxy):
@@ -69,4 +71,6 @@ class AsyncClientProxy(Proxy):
     async def __call__(self, *args, **kwargs):
         request = self.get_request(*args, **kwargs)
         raw_response = await self.instance.do_request(request)
-        return self.method_info.response_type(**raw_response)
+        if self.method_info.response_type:
+            return self.method_info.response_type(**raw_response)
+        return raw_response

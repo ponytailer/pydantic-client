@@ -5,7 +5,7 @@ from pydantic_client.schema.method_info import MethodInfo
 
 
 def create_response_type(annotations: Dict[str, Any]) -> Type:
-    return annotations.pop("return", Any)
+    return annotations.pop("return", None)
 
 
 def parse_func(
