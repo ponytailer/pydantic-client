@@ -62,19 +62,14 @@ class AsyncR(AIOHttpClient):
 
 
 class HttpxR(HttpxClient, AsyncR):
-    ...
+    def __init__(self):
+        super().__init__("http://localhost")
 
 
 @pytest.fixture
-def client():
-    yield R()
-
-
-@pytest.fixture
-def async_client():
-    yield AsyncR()
-
-
-@pytest.fixture
-def httpx_client():
-    yield HttpxR("http://localhost")
+def clients():
+    yield (
+        R(),
+        AsyncR(),
+        HttpxR()
+    )
