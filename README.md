@@ -1,4 +1,5 @@
 # pydantic-client
+[![codecov](https://codecov.io/gh/ponytailer/pydantic-client/branch/main/graph/badge.svg?token=CZX5V1YP22)](https://codecov.io/gh/ponytailer/pydantic-client)
 
 Http client base pydantic, with requests or aiohttp
 
