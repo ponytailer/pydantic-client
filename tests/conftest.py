@@ -1,8 +1,9 @@
 import pytest
 
 from pydantic_client import delete, get, post, put
-from pydantic_client.clients.aiohttp_client import AIOHttpClient
-from pydantic_client.clients.requests_client import RequestsClient
+from pydantic_client.clients.aiohttp import AIOHttpClient
+from pydantic_client.clients.httpx import HttpxClient
+from pydantic_client.clients.requests import RequestsClient
 from tests.book import Book
 
 
@@ -60,6 +61,10 @@ class AsyncR(AIOHttpClient):
         ...
 
 
+class HttpxR(HttpxClient, AsyncR):
+    ...
+
+
 @pytest.fixture
 def client():
     yield R()
@@ -68,3 +73,8 @@ def client():
 @pytest.fixture
 def async_client():
     yield AsyncR()
+
+
+@pytest.fixture
+def httpx_client():
+    yield HttpxR("http://localhost")
