@@ -17,8 +17,8 @@ def mock_book(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_get(client, mock_book):
-    for cl in client:
+async def test_get(clients, mock_book):
+    for cl in clients:
         book = cl.get_book(1, "world")
         if inspect.isawaitable(book):
             book = await book
@@ -27,8 +27,8 @@ async def test_get(client, mock_book):
 
 
 @pytest.mark.asyncio
-async def test_get_raw(client, mock_book):
-    for cl in client:
+async def test_get_raw(clients, mock_book):
+    for cl in clients:
         book = cl.get_raw_book(1)
         if inspect.isawaitable(book):
             book = await book
@@ -37,8 +37,8 @@ async def test_get_raw(client, mock_book):
 
 
 @pytest.mark.asyncio
-async def test_post_form(client, mock_book):
-    for cl in client:
+async def test_post_form(clients, mock_book):
+    for cl in clients:
         book = cl.create_book_form(Book(name="name", age=2))
         if inspect.isawaitable(book):
             book = await book
@@ -47,8 +47,8 @@ async def test_post_form(client, mock_book):
 
 
 @pytest.mark.asyncio
-async def test_put(client, mock_book):
-    for cl in client:
+async def test_put(clients, mock_book):
+    for cl in clients:
         book = cl.change_book(1, Book(name="name", age=2))
         if inspect.isawaitable(book):
             book = await book
@@ -57,8 +57,8 @@ async def test_put(client, mock_book):
 
 
 @pytest.mark.asyncio
-async def test_delete(client, mock_book):
-    for cl in client:
+async def test_delete(clients, mock_book):
+    for cl in clients:
         book = cl.delete_book(1)
         if inspect.isawaitable(book):
             book = await book

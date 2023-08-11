@@ -67,7 +67,7 @@ class HttpxR(HttpxClient, AsyncR):
 
 
 @pytest.fixture
-def client():
+def clients():
     yield (
         R(),
         AsyncR(),
