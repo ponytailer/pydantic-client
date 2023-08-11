@@ -1,45 +1,40 @@
-import unittest
+import pytest
 
-from pydantic import BaseModel
-
-from pydantic_client import delete, get, post, put, RequestsClient
-
-
-class Book(BaseModel):
-    name: str
-    age: int
+from tests.book import Book
+from tests.helpers import mock_requests
 
 
-class R(RequestsClient):
-    def __init__(self):
-        super().__init__("http://localhost")
-
-    @get("/books/{book_id}?query={query}")
-    def get_book(self, book_id: int, query: str) -> Book:
-        ...
-
-    @post("/books", form_body=True)
-    def create_book_form(self, book: Book) -> Book:
-        """ will post the form with book"""
-        ...
-
-    @put("/books/{book_id}")
-    def change_book(self, book_id: int, book: Book) -> Book:
-        """will put the json body"""
-        ...
-
-    @delete("/books/{book_id}")
-    def change_book(self, book_id: int) -> Book:
-        ...
+@pytest.fixture
+def mock_get_book(monkeypatch):
+    mock_resp = {"name": "name", "age": 1}
+    yield mock_requests(monkeypatch, response=mock_resp)
 
 
-class TestClient(unittest.TestCase):
+def test_get(client, mock_get_book):
+    book: Book = client.get_book(1, "world")
+    assert book.name == "name"
+    assert book.age == 1
 
-    def setUp(self):
-        self.test_client = R()
 
-    def tearDown(self):
-        self.test_client = None
+def test_get_raw(client, mock_get_book):
+    book: dict = client.get_raw_book(1)
+    assert book["name"] == "name"
+    assert book["age"] == 1
 
-    def test_get(self):
-        ...
+
+def test_post_form(client, mock_get_book):
+    book: Book = client.create_book_form(Book(name="name", age=2))
+    assert book.name == "name"
+    assert book.age == 1
+
+
+def test_put(client, mock_get_book):
+    book: Book = client.change_book(1, Book(name="name", age=2))
+    assert book.name == "name"
+    assert book.age == 1
+
+
+def test_delete(client, mock_get_book):
+    book: Book = client.delete_book(1)
+    assert book.name == "name"
+    assert book.age == 1
