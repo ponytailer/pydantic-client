@@ -1,6 +1,8 @@
 import pytest
 
-from pydantic_client import AIOHttpClient, delete, get, post, put, RequestsClient
+from pydantic_client import delete, get, post, put
+from pydantic_client.clients.aiohttp_client import AIOHttpClient
+from pydantic_client.clients.requests_client import RequestsClient
 from tests.book import Book
 
 

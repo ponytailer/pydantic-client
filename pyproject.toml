@@ -18,7 +18,14 @@ python = "^3.8"
 
 pydantic = "*"
 requests = "*"
-aiohttp = "*"
+
+aiohttp = { version = "*", optional = true }
+httpx = { version = "*", optional = true }
+
+[tool.poetry.extras]
+httpx = ["httpx"]
+aiohttp = ["aiohttp"]
+all = ["httpx", "aiohttp"]
 
 [build-system]
 requires = ["poetry-core"]

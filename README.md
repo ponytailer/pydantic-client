@@ -2,6 +2,23 @@
 
 Http client base pydantic, with requests or aiohttp
 
+### How to install
+
+1. only support requests:
+
+   `pip install pydantic-client`
+2. support aiohttp and requests:
+
+   `pip install pydantic-client[aiohttp]`
+
+3. support httpx and requests:
+
+   `pip install pydantic-client[httpx]`
+
+4. support all:
+
+   `pip install pydantic-client[all]`
+
 ### How to use
 
 ```python
@@ -10,7 +27,8 @@ Http client base pydantic, with requests or aiohttp
 
 from pydantic import BaseModel
 
-from pydantic_client import delete, get, post, put, RequestsClient
+from pydantic_client import delete, get, post, put
+from pydantic_client.clients.requests_client import RequestsClient
 
 
 class Book(BaseModel):
