@@ -1,3 +1,4 @@
+import aiohttp
 import requests
 
 
@@ -23,6 +24,18 @@ class MockResponse:
         return self.code
 
 
+class MockAsyncResponse(MockResponse):
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args, **kwargs):
+        ...
+
+    @property
+    def status(self):
+        return self.code
+
+
 def mock_requests(
     monkeypatch,
     response=None,
@@ -38,5 +51,24 @@ def mock_requests(
     return_value = {"code": code, "response": response or {}}
     monkeypatch.setattr(
         requests.Session, "request",
+        mock_call(return_value)
+    )
+
+
+def mock_aio_http(
+    monkeypatch,
+    response=None,
+    code=200
+):
+
+    def mock_call(mock_return_value):
+        def mock(*args, **kwargs):
+            return MockAsyncResponse(**mock_return_value)
+
+        return mock
+
+    return_value = {"code": code, "response": response or {}}
+    monkeypatch.setattr(
+        aiohttp.ClientSession, "request",
         mock_call(return_value)
     )
