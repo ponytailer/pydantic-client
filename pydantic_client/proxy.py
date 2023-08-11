@@ -2,7 +2,7 @@ import inspect
 import logging
 import re
 from typing import Any, Dict
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qsl
 
 from pydantic import BaseModel
 
@@ -32,8 +32,12 @@ class Proxy:
 
     def _get_url(self, args) -> str:
         keys = self.querystring_pattern.findall(self.method_info.url)
-        query_args = {arg: args.pop(arg) for arg, val in args.items() if
+        query_args = {arg: val for arg, val in args.items() if
             arg in keys and val}
+
+        for key in keys:
+            args.pop(key, None)
+
         url = self.method_info.url.format(**query_args)
 
         url_result = urlparse(url)
@@ -41,7 +45,7 @@ class Proxy:
             logger.warning(f"Not formatted args in url path: {url}")
 
         querystring = "&".join(
-            f"{k}={v}" for k, v in url_result.query if "{" not in v
+            f"{k}={v}" for k, v in parse_qsl(url_result.query) if "{" not in v
         )
         return url_result.path + "?" + querystring if querystring else url_result.path
 

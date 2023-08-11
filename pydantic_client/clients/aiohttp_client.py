@@ -10,13 +10,12 @@ from pydantic_client.schema.http_request import HttpRequest
 class AIOHttpClient(AbstractClient):
     runner_class: Type[Proxy] = AsyncClientProxy
 
-    def __init__(self, base_url: str, session: ClientSession = ClientSession()):
-        self.session = session
+    def __init__(self, base_url: str):
         self.base_url = base_url
 
     async def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
-        async with self.session as session:
+        async with ClientSession() as session:
             try:
                 req = session.request(
                     url=self.base_url + request.url,
