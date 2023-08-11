@@ -20,7 +20,7 @@ pydantic = "*"
 requests = "*"
 
 aiohttp = { version = "*", optional = true }
-httpx = { version = "*", optional = true }
+httpx = { version = "*", extras = ["http2"], optional = true }
 
 [tool.poetry.extras]
 httpx = ["httpx"]

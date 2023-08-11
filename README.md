@@ -29,33 +29,33 @@ Http client base pydantic, with requests or aiohttp
 from pydantic import BaseModel
 
 from pydantic_client import delete, get, post, put
-from pydantic_client.clients.requests_client import RequestsClient
+from pydantic_client.clients.requests import RequestsClient
 
 
 class Book(BaseModel):
-    name: str
-    age: int
+   name: str
+   age: int
 
 
 class R(RequestsClient):
 
-    @get("/books/{book_id}?query={query}")
-    def get_book(self, book_id: int, query: str) -> Book:
-        ...
+   @get("/books/{book_id}?query={query}")
+   def get_book(self, book_id: int, query: str) -> Book:
+      ...
 
-    @post("/books", form_body=True)
-    def create_book_form(self, book: Book) -> Book:
-        """ will post the form with book"""
-        ...
+   @post("/books", form_body=True)
+   def create_book_form(self, book: Book) -> Book:
+      """ will post the form with book"""
+      ...
 
-    @put("/books/{book_id}")
-    def change_book(self, book_id: int, book: Book) -> Book:
-        """will put the json body"""
-        ...
+   @put("/books/{book_id}")
+   def change_book(self, book_id: int, book: Book) -> Book:
+      """will put the json body"""
+      ...
 
-    @delete("/books/{book_id}")
-    def change_book(self, book_id: int) -> Book:
-        ...
+   @delete("/books/{book_id}")
+   def change_book(self, book_id: int) -> Book:
+      ...
 
 
 my_client = R("http://localhost/v1")
