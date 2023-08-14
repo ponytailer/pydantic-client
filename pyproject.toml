@@ -16,7 +16,7 @@ default = true
 [tool.poetry.dependencies]
 python = "^3.8"
 
-pydantic = "*"
+pydantic = ">=2.1"
 requests = "*"
 
 aiohttp = { version = "*", optional = true }
