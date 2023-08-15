@@ -23,9 +23,6 @@ Http client base pydantic, with requests or aiohttp
 ### How to use
 
 ```python
-
-
-
 from pydantic import BaseModel
 
 from pydantic_client import delete, get, post, put
@@ -60,4 +57,33 @@ class R(RequestsClient):
 
 my_client = R("http://localhost/v1")
 get_book: Book = my_client.get_book(1)
+```
+
+The Group
+```python
+
+from pydantic_client import Group
+from pydantic_client.clients.requests import RequestsClient
+
+group = Group("/book")
+person_group = Group("/person")
+
+
+class GroupClient(RequestsClient):
+   def __init__(self):
+      super().__init__("http://localhost")
+
+   @group.get("/{book_id}")
+   def get(self, book_id: int) -> Book:  # type: ignore
+      ...
+   
+   @person_group.get("/{person_id}")
+   def get_person(self, person_id: int) -> Person:  # type: ignore
+      ...
+   
+client = GroupClient()
+book = client.get(1)
+person = client.get_person(1)
+
+
 ```

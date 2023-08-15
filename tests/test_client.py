@@ -64,3 +64,13 @@ async def test_delete(clients, mock_book):
             book = await book
         assert book.name == "name"
         assert book.age == 1
+
+
+@pytest.mark.asyncio
+async def test_patch(clients, mock_book):
+    for cl in clients:
+        book = cl.patch_book(1, Book(name="name2", age=3))
+        if inspect.isawaitable(book):
+            book = await book
+        assert book.name == "name"
+        assert book.age == 1
