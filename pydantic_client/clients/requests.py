@@ -13,7 +13,7 @@ class RequestsClient(AbstractClient):
 
     def __init__(self, base_url: str, session: Session = Session()):
         self.session = session
-        self.base_url = base_url
+        self.base_url = base_url.rstrip("/")
 
     def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
