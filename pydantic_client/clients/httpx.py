@@ -11,7 +11,7 @@ class HttpxClient(AbstractClient):
     runner_class: Type[Proxy] = AsyncClientProxy
 
     def __init__(self, base_url: str, http2: bool = False):
-        self.base_url = base_url
+        self.base_url = base_url.rstrip("/")
         self.http2 = http2
 
     async def do_request(self, request: HttpRequest) -> Any:

@@ -10,6 +10,10 @@ def rest(
     method: str = "GET",
     form_body: bool = False
 ) -> Callable:
+
+    if not url.startswith("/"):
+        raise ValueError("url must start with slash.")
+
     def wrapper(func: Callable) -> MethodInfo:
         return parse_func(
             url=url,

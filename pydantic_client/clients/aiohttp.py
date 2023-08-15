@@ -11,7 +11,7 @@ class AIOHttpClient(AbstractClient):
     runner_class: Type[Proxy] = AsyncClientProxy
 
     def __init__(self, base_url: str):
-        self.base_url = base_url
+        self.base_url = base_url.rstrip("/")
 
     async def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
