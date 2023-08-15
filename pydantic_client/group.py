@@ -1,6 +1,6 @@
 from typing import Optional
 
-from .decorators import delete, get, post, put
+from .decorators import delete, get, patch, post, put
 
 
 class Group:

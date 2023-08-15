@@ -1,9 +1,8 @@
-from .decorators import delete, get, patch, post, put, rest
+from .decorators import delete, get, patch, post, put
 from .group import Group
 
 __all__ = [
     "patch",
-    "rest",
     "get",
     "post",
     "put",
