@@ -1,6 +1,6 @@
 import pytest
 
-from pydantic_client import delete, get, post, put
+from pydantic_client import delete, get, patch, post, put
 from pydantic_client.clients.aiohttp import AIOHttpClient
 from pydantic_client.clients.httpx import HttpxClient
 from pydantic_client.clients.requests import RequestsClient
@@ -33,6 +33,10 @@ class R(RequestsClient):
     def delete_book(self, book_id: int) -> Book:
         ...
 
+    @patch("/books/{book_id}")
+    def patch_book(self, book_id: int, book: Book) -> Book:
+        ...
+
 
 class AsyncR(AIOHttpClient):
     def __init__(self):
@@ -58,6 +62,10 @@ class AsyncR(AIOHttpClient):
 
     @delete("/books/{book_id}")
     async def delete_book(self, book_id: int) -> Book:
+        ...
+
+    @patch("/books/{book_id}")
+    async def patch_book(self, book_id: int, book: Book) -> Book:
         ...
 
 
