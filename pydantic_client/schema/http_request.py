@@ -8,3 +8,4 @@ class HttpRequest(BaseModel):
     json_body: Optional[Dict] = {}
     url: str
     method: str
+    request_headers: Optional[Dict] = None

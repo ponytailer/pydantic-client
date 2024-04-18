@@ -10,7 +10,6 @@ homepage = "https://github.com/ponytailer/pydantic-client"
 [[tool.poetry.source]]
 name = "tuna"
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-default = true
 
 
 [tool.poetry.dependencies]
