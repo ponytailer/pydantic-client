@@ -95,10 +95,15 @@ person = client.get_person(1)
 ```python
 
 # global level headers
-my_client = R("http://localhost/v1", headers={"Authorization": "Bearer xxxxxxx"})
+my_client = R("http://localhost/v1", headers={"Authorization": "xxxxxxx"})
 
-# request level headers, and its priority is greater than global. 
-my_client.get(1, request_headers={"Authorization": "Bearer xxxxxxx"})
-my_client.post(1, request_headers={"Authorization": "Bearer yyyyy"})
+# request level headers, and its priority is higher than global. 
+
+# header should be xxxxxxx
+my_client.delete(1)
+# header should be zzzzz
+my_client.get(1, request_headers={"Authorization": "zzzzz"})
+# header should be yyyyy
+my_client.post(1, request_headers={"Authorization": "yyyyy"})
 
 ```
