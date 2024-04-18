@@ -87,3 +87,18 @@ person = client.get_person(1)
 
 
 ```
+
+# change log
+
+### v0.1.14: add global or request level headers
+
+```python
+
+# global level headers
+my_client = R("http://localhost/v1", headers={"Authorization": "Bearer xxxxxxx"})
+
+# request level headers, and its priority is greater than global. 
+my_client.get(1, request_headers={"Authorization": "Bearer xxxxxxx"})
+my_client.post(1, request_headers={"Authorization": "Bearer yyyyy"})
+
+```

@@ -18,6 +18,8 @@ class HttpxClient(AbstractClient):
 
     async def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
+        headers = request.request_headers if request.request_headers \
+            else self.headers
         async with AsyncClient(http2=self.http2) as session:
             try:
                 response = await session.request(
@@ -25,7 +27,7 @@ class HttpxClient(AbstractClient):
                     method=request.method,
                     json=json,
                     data=data,
-                    headers=self.headers
+                    headers=headers
                 )
                 response.raise_for_status()
                 if response.is_success:

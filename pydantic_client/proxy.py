@@ -2,7 +2,7 @@ import inspect
 import logging
 import re
 from typing import Any, Dict
-from urllib.parse import urlparse, parse_qsl
+from urllib.parse import parse_qsl, urlparse
 
 from pydantic import BaseModel
 
@@ -33,7 +33,7 @@ class Proxy:
     def _get_url(self, args) -> str:
         keys = self.querystring_pattern.findall(self.method_info.url)
         query_args = {arg: val for arg, val in args.items() if
-            arg in keys and val}
+                      arg in keys and val}
 
         for key in keys:
             args.pop(key, None)
@@ -61,14 +61,17 @@ class Proxy:
         url: str = self._get_url(func_args)
         if self.method_info.form_body:
             data, json = self.dict_to_body(func_args), {}
+            request_headers = data.pop("request_headers", None)
         else:
             data, json = {}, self.dict_to_body(func_args)
+            request_headers = json.pop("request_headers", None)
 
         return HttpRequest(
             url=url,
             data=data,
             json_body=json,
-            method=self.method_info.http_method
+            method=self.method_info.http_method,
+            request_headers=request_headers
         )
 
 

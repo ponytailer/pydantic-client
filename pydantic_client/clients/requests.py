@@ -1,6 +1,7 @@
-from typing import Any, Type, Dict
+from typing import Any, Dict, Type
 
 from requests import Session
+
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.proxy import ClientProxy, Proxy
 from pydantic_client.schema.http_request import HttpRequest
@@ -17,6 +18,9 @@ class RequestsClient(AbstractClient):
 
     def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
+        headers = request.request_headers if request.request_headers \
+            else self.headers
+
         try:
             return self.session.request(
                 url=self.base_url + request.url,
