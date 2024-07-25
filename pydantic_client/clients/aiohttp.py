@@ -31,6 +31,6 @@ class AIOHttpClient(AbstractClient):
                 async with req as resp:
                     resp.raise_for_status()
                     if resp.status == 200:
-                        return resp.json()
+                        return await resp.json()
             except BaseException as e:
                 raise e

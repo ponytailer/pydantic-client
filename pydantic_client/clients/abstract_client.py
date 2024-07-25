@@ -12,8 +12,8 @@ class AbstractClient:
     def parse_request(request: HttpRequest) -> Tuple[Dict, Dict]:
         if request.data:
             data = request.data
-            json = {}
+            json = None
         else:
-            data = {}
+            data = None
             json = request.json_body
         return data, json
