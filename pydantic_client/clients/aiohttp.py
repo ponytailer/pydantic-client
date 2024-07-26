@@ -8,7 +8,7 @@ from pydantic_client.schema.http_request import HttpRequest
 
 
 class AIOHttpClient(AbstractClient):
-    runner_class: Type[Proxy] = AsyncClientProxy
+    runner_class: Proxy = AsyncClientProxy
 
     def __init__(self, base_url: str, headers: Dict[str, Any] = None):
         self.base_url = base_url.rstrip("/")

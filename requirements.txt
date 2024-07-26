@@ -2,12 +2,17 @@
 
 autoflake==2.3.1
 black==24.4.0
+fastapi==0.110.3
 flake8==6.0.0
 isort==5.13.2
 mypy==1.8.0
 pre-commit==3.5.0
-pytest==8.1.1
+pytest==8.2.0
 pytest-cov==5.0.0
 pytest-asyncio
-aiohttp
-httpx[http2]
+aiohttp==3.9.5
+httpx[http2]==0.27.0
+
+pydantic==2.5.2
+requests==2.31.0
+uvicorn==0.29.0

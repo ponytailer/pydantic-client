@@ -8,6 +8,8 @@ from pydantic_client.schema.method_info import MethodInfo
 
 def create_response_type(annotations: Dict[str, Any]) -> Type | None:
     response_type = annotations.pop("return", None)
+    if response_type is None:
+        return response_type
 
     class T(BaseModel):
         val: response_type
