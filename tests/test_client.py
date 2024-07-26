@@ -16,6 +16,15 @@ async def test_get(clients):
 
 
 @pytest.mark.asyncio
+async def test_get_num_pages(clients):
+    for cl in clients:
+        num_pages = cl.get_book_num_pages(1)
+        if inspect.isawaitable(num_pages):
+            num_pages = await num_pages
+        assert num_pages == 42
+
+
+@pytest.mark.asyncio
 async def test_get_raw(clients):
     for cl in clients:
         book = cl.get_raw_book(1)

@@ -17,6 +17,11 @@ def get_raw_book(book_id: int):
     return get_the_book()
 
 
+@app.get("/books/{book_id}/num_pages")
+def get_book_num_pages(book_id: int) -> int:
+    return 42
+
+
 @app.post("/books")
 def create_book_form(name: Annotated[str, Form()], age: Annotated[int, Form()]) -> Book:
     return Book(name=name, age=age)

@@ -17,6 +17,10 @@ class R(RequestsClient):
     def get_raw_book(self, book_id: int):
         ...
 
+    @get("/books/{book_id}/num_pages")
+    def get_book_num_pages(self, book_id: int) -> int:
+        ...
+
     @post("/books", form_body=True)
     def create_book_form(self, book: Book) -> Book:
         """ will post the form with book"""
@@ -43,6 +47,10 @@ class AsyncR(AIOHttpClient):
 
     @get("/books/{book_id}")
     async def get_raw_book(self, book_id: int):
+        ...
+
+    @get("/books/{book_id}/num_pages")
+    def get_book_num_pages(self, book_id: int) -> int:
         ...
 
     @post("/books", form_body=True)
