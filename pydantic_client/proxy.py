@@ -49,11 +49,10 @@ class Proxy:
         )
         return url_result.path + "?" + querystring if querystring else url_result.path
 
-    @staticmethod
-    def dict_to_body(func_args: Dict[str, Any]) -> Dict:
+    def dict_to_body(self, func_args: Dict[str, Any]) -> Dict:
         keys = list(func_args.keys())
         if len(keys) == 1:
-            return func_args[keys[0]]
+            return self.instance.data_encoder(func_args[keys[0]])
         return {}
 
     def get_request(self, *args, **kwargs):
@@ -81,7 +80,7 @@ class ClientProxy(Proxy):
         request = self.get_request(*args, **kwargs)
         raw_response = self.instance.do_request(request)
         if self.method_info.response_type:
-            return self.method_info.response_type(**raw_response)
+            return self.method_info.response_type(val=raw_response).val
         return raw_response
 
 
@@ -91,5 +90,5 @@ class AsyncClientProxy(Proxy):
         request = self.get_request(*args, **kwargs)
         raw_response = await self.instance.do_request(request)
         if self.method_info.response_type:
-            return self.method_info.response_type(**raw_response)
+            return self.method_info.response_type(val=raw_response).val
         return raw_response

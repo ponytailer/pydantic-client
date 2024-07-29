@@ -8,7 +8,7 @@ from pydantic_client.schema.http_request import HttpRequest
 
 
 class AIOHttpClient(AbstractClient):
-    runner_class: Type[Proxy] = AsyncClientProxy
+    runner_class: Proxy = AsyncClientProxy
 
     def __init__(self, base_url: str, headers: Dict[str, Any] = None):
         self.base_url = base_url.rstrip("/")
@@ -31,6 +31,6 @@ class AIOHttpClient(AbstractClient):
                 async with req as resp:
                     resp.raise_for_status()
                     if resp.status == 200:
-                        return resp.json()
+                        return await resp.json()
             except BaseException as e:
                 raise e

@@ -1,26 +1,19 @@
 from pydantic_client import Group
 from pydantic_client.clients.requests import RequestsClient
-from tests.book import Book
-from tests.helpers import mock_requests
+from tests.book import Book, get_the_book
 
-group = Group("/book")
+group = Group("/books")
 
 
 class GroupClient(RequestsClient):
-    def __init__(self):
-        super().__init__("http://localhost")
-
     @group.get("/{book_id}")
     def get(self, book_id: int) -> Book:  # type: ignore
         ...
 
 
-def test_group_get(monkeypatch):
-    mock_resp = {"name": "name", "age": 1}
-    mock_requests(monkeypatch, response=mock_resp)
+def test_group_get(fastapi_server_url):
 
-    client = GroupClient()
+    client = GroupClient(fastapi_server_url)
 
     book = client.get(1)
-    assert book.name == "name"
-    assert book.age == 1
+    assert book == get_the_book()

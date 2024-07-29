@@ -8,8 +8,6 @@ from tests.book import Book
 
 
 class R(RequestsClient):
-    def __init__(self):
-        super().__init__("http://localhost")
 
     @get("/books/{book_id}?query={query}")
     def get_book(self, book_id: int, query: str) -> Book:
@@ -17,6 +15,10 @@ class R(RequestsClient):
 
     @get("/books/{book_id}")
     def get_raw_book(self, book_id: int):
+        ...
+
+    @get("/books/{book_id}/num_pages")
+    def get_book_num_pages(self, book_id: int) -> int:
         ...
 
     @post("/books", form_body=True)
@@ -39,15 +41,16 @@ class R(RequestsClient):
 
 
 class AsyncR(AIOHttpClient):
-    def __init__(self):
-        super().__init__("http://localhost")
-
     @get("/books/{book_id}?query={query}")
     async def get_book(self, book_id: int, query: str) -> Book:
         ...
 
     @get("/books/{book_id}")
     async def get_raw_book(self, book_id: int):
+        ...
+
+    @get("/books/{book_id}/num_pages")
+    def get_book_num_pages(self, book_id: int) -> int:
         ...
 
     @post("/books", form_body=True)
@@ -70,14 +73,41 @@ class AsyncR(AIOHttpClient):
 
 
 class HttpxR(HttpxClient, AsyncR):
-    def __init__(self):
-        super().__init__("http://localhost")
+    ...
+
+
+@pytest.fixture(scope="session")
+def fastapi_server_url() -> str:
+    from uvicorn import run
+    from .fastapi_service import app
+    from threading import Thread
+    host = "localhost"
+    port = 12098  # TODO: add port availability check
+    def start_server():
+        run(app, host=host, port=port)
+
+    thread = Thread(target=start_server, daemon=True)
+    thread.start()
+
+    for _ in range(10):
+        assert thread.is_alive(), "Fastapi thread died"
+        try:
+            url = f"http://{host}:{port}"
+            import requests
+            book = requests.get(f"{url}/books/5")
+            book.raise_for_status()
+            return "http://localhost:12098/"
+        except Exception:
+            from time import sleep
+            sleep(1)
+
+    raise Exception("Can't start fastapi server in 10 seconds")
 
 
 @pytest.fixture
-def clients():
+def clients(fastapi_server_url):
     yield (
-        R(),
-        AsyncR(),
-        HttpxR()
+        R(fastapi_server_url),
+        AsyncR(fastapi_server_url),
+        HttpxR(fastapi_server_url)
     )

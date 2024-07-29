@@ -1,11 +1,20 @@
 import inspect
-from typing import Any, Callable, Dict, Type
+from typing import Any, Callable, Dict, Optional, Type
+
+from pydantic import BaseModel
 
 from pydantic_client.schema.method_info import MethodInfo
 
 
-def create_response_type(annotations: Dict[str, Any]) -> Type:
-    return annotations.pop("return", None)
+def create_response_type(annotations: Dict[str, Any]) -> Optional[Type]:
+    response_type = annotations.pop("return", None)
+    if response_type is None:
+        return response_type
+
+    class T(BaseModel):
+        val: response_type
+
+    return T
 
 
 def parse_func(
@@ -15,7 +24,6 @@ def parse_func(
     method: str,
     form_body: bool,
 ):
-
     spec = inspect.getfullargspec(func)
     annotations = spec.annotations.copy()
     return MethodInfo(
