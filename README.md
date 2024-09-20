@@ -105,5 +105,13 @@ my_client.delete(1)
 my_client.get(1, request_headers={"Authorization": "zzzzz"})
 # header should be yyyyy
 my_client.post(1, request_headers={"Authorization": "yyyyy"})
+```
+
+### v0.1.16: load config from toml to init client. 
+
+```python
+
+client = R.load_config_from_toml("config.toml")
+
 
 ```

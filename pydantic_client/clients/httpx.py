@@ -1,7 +1,6 @@
-from typing import Any, Dict, Type
+from typing import Any, Type
 
 from httpx import AsyncClient
-
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.proxy import AsyncClientProxy, Proxy
 from pydantic_client.schema.http_request import HttpRequest
@@ -9,12 +8,6 @@ from pydantic_client.schema.http_request import HttpRequest
 
 class HttpxClient(AbstractClient):
     runner_class: Type[Proxy] = AsyncClientProxy
-
-    def __init__(self, base_url: str, http2: bool = False,
-                 headers: Dict[str, Any] = None):
-        self.base_url = base_url.rstrip("/")
-        self.http2 = http2
-        self.headers = headers
 
     async def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
