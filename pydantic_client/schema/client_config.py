@@ -16,4 +16,9 @@ class ClientConfig(BaseModel):
             raise ImportError("toml is required, please install it using pip")
 
         with open(path) as f:
-            return cls(**toml.load(f))
+            config = toml.load(f)
+            cfg = config.get("tools", {}) \
+                .get("pydantic-client", {}).get("config")
+            if not cfg:
+                raise ValueError("`tools.pydantic-client.config` not found in toml file")  # noqa
+            return cls(**cfg)

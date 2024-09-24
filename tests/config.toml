@@ -1,3 +1,4 @@
+[tools.pydantic-client.config]
 base_url = "http://localhost"
 headers.authorization = "Bearer xxxxxx"
 headers.keepalive = 30

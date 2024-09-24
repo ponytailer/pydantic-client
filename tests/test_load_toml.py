@@ -1,5 +1,5 @@
 from pydantic_client.clients.requests import RequestsClient
-from pydantic_client.schema.ClientConfig import ClientConfig
+from pydantic_client.schema.client_config import ClientConfig
 
 
 def test_load_toml():
