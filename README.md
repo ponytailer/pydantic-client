@@ -107,9 +107,15 @@ my_client.get(1, request_headers={"Authorization": "zzzzz"})
 my_client.post(1, request_headers={"Authorization": "yyyyy"})
 ```
 
-### v0.1.16: load config from toml to init client. 
+### v0.1.17: load config from toml to init client. 
 
 ```python
+
+# config.toml or pyproject.toml
+[tool.pydantic_client.config]
+base_url = "http://localhost/v1"
+headers.authorization = "xxxxxxx"
+headers.user = "xxxxxxx"
 
 client = R.load_config_from_toml("config.toml")
 
