@@ -1,4 +1,12 @@
 [tools.pydantic-client.config]
-base_url = "http://localhost"
+base_url = "http://localhost:12098"
 headers.authorization = "Bearer xxxxxx"
-headers.keepalive = 30
+
+[[tools.pydantic-client.factory]]
+name = "book"
+base_url = "http://localhost:12098"
+headers.authorization = "Bearer xxxxxx"
+
+[[tools.pydantic-client.factory]]
+name = "book_2"
+base_url = "http://localhost:12098"

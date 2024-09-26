@@ -1,20 +1,18 @@
-from typing import Any, Type
+from typing import Any
 
 from requests import Session
 
 from pydantic_client.clients.abstract_client import AbstractClient
-from pydantic_client.proxy import ClientProxy, Proxy
 from pydantic_client.schema.http_request import HttpRequest
 
 
 class RequestsClient(AbstractClient):
-    runner_class: Type[Proxy] = ClientProxy
     session = Session()
 
     def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
         headers = request.request_headers if request.request_headers \
-            else self.headers
+            else self.config.headers
 
         try:
             return self.session.request(
@@ -22,7 +20,8 @@ class RequestsClient(AbstractClient):
                 method=request.method,
                 json=json,
                 data=data,
-                headers=headers
+                headers=headers,
+                timeout=self.config.timeout,
             ).json()
         except BaseException as e:
             raise e

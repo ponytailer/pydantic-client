@@ -1,13 +1,14 @@
 import pytest
 
-from pydantic_client import delete, get, patch, post, put
+from pydantic_client import delete, get, patch, post, put, PydanticClient
 from pydantic_client.clients.aiohttp import AIOHttpClient
 from pydantic_client.clients.httpx import HttpxClient
 from pydantic_client.clients.requests import RequestsClient
+from pydantic_client.factory import PydanticClientFactory
 from tests.book import Book
 
 
-class R(RequestsClient):
+class R:
 
     @get("/books/{book_id}?query={query}")
     def get_book(self, book_id: int, query: str) -> Book:
@@ -40,7 +41,7 @@ class R(RequestsClient):
         ...
 
 
-class AsyncR(AIOHttpClient):
+class AsyncR:
     @get("/books/{book_id}?query={query}")
     async def get_book(self, book_id: int, query: str) -> Book:
         ...
@@ -50,7 +51,7 @@ class AsyncR(AIOHttpClient):
         ...
 
     @get("/books/{book_id}/num_pages")
-    def get_book_num_pages(self, book_id: int) -> int:
+    async def get_book_num_pages(self, book_id: int) -> int:
         ...
 
     @post("/books", form_body=True)
@@ -72,7 +73,7 @@ class AsyncR(AIOHttpClient):
         ...
 
 
-class HttpxR(HttpxClient, AsyncR):
+class HttpxR(AsyncR):
     ...
 
 
@@ -83,6 +84,7 @@ def fastapi_server_url() -> str:
     from threading import Thread
     host = "localhost"
     port = 12098  # TODO: add port availability check
+
     def start_server():
         run(app, host=host, port=port)
 
@@ -106,8 +108,26 @@ def fastapi_server_url() -> str:
 
 @pytest.fixture
 def clients(fastapi_server_url):
-    yield (
-        R(fastapi_server_url),
-        AsyncR(fastapi_server_url),
-        HttpxR(fastapi_server_url)
-    )
+    client_1 = PydanticClient.from_toml("tests/config.toml") \
+        .bind_client(RequestsClient) \
+        .bind_protocol(R).build()
+
+    client_3 = PydanticClient.from_toml("tests/config.toml") \
+        .bind_client(HttpxClient) \
+        .bind_protocol(HttpxR).build()
+
+    client_2 = PydanticClient.from_toml("tests/config.toml") \
+        .bind_client(AIOHttpClient) \
+        .bind_protocol(AsyncR).build()
+
+    yield client_1, client_2, client_3
+
+
+@pytest.fixture
+def factory(fastapi_server_url):
+    factory = PydanticClientFactory.from_toml("tests/config.toml") \
+        .register_client("book", RequestsClient, R) \
+        .register_client("book_2", HttpxClient, HttpxR) \
+        .build()
+
+    yield factory

@@ -1,3 +1,5 @@
+import json
+
 from typing_extensions import Annotated
 
 from fastapi import FastAPI, Form
@@ -18,8 +20,8 @@ def get_raw_book(book_id: int):
 
 
 @app.get("/books/{book_id}/num_pages")
-def get_book_num_pages(book_id: int) -> int:
-    return 42
+def get_book_num_pages(book_id: int) -> str:
+    return json.dumps(40)
 
 
 @app.post("/books")

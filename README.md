@@ -3,6 +3,7 @@
 [![codecov](https://codecov.io/gh/ponytailer/pydantic-client/branch/main/graph/badge.svg?token=CZX5V1YP22)](https://codecov.io/gh/ponytailer/pydantic-client) [![Upload Python Package](https://github.com/ponytailer/pydantic-client/actions/workflows/python-publish.yml/badge.svg)](https://github.com/ponytailer/pydantic-client/actions/workflows/python-publish.yml)
 
 Http client base pydantic, with requests, aiohttp and httpx.
+Only support the json response.
 
 ### How to install
 
@@ -23,8 +24,9 @@ Http client base pydantic, with requests, aiohttp and httpx.
 ```python
 from pydantic import BaseModel
 
-from pydantic_client import delete, get, post, put
-from pydantic_client.clients.requests import RequestsClient
+from pydantic_client import delete, get, post, put, PydanticClient
+from pydantic_client.clients import RequestsClient, AIOHttpClient, HttpxClient
+from pydantic_client import ClientConfig, PydanticClientFactory
 
 
 class Book(BaseModel):
@@ -32,7 +34,7 @@ class Book(BaseModel):
     age: int
 
 
-class R(RequestsClient):
+class WebClient:
 
     @get("/books/{book_id}?query={query}")
     def get_book(self, book_id: int, query: str) -> Book:
@@ -52,72 +54,93 @@ class R(RequestsClient):
     def change_book(self, book_id: int) -> Book:
         ...
 
+"""
+toml config example:
 
-my_client = R("http://localhost/v1")
-get_book: Book = my_client.get_book(1)
-```
-
-The Group
-
-```python
-
-from pydantic_client import Group
-from pydantic_client.clients.requests import RequestsClient
-
-group = Group("/book")
-person_group = Group("/person")
+[tools.pydantic-client.config]
+base_url = "http://localhost:5000" (have to set)
+headers.authorization = "Bearer xxxxxx" (optional)
+http2 = true  (optional)
+timeout = 10 (optional)
+"""
 
 
-class GroupClient(RequestsClient):
-    def __init__(self):
-        super().__init__("http://localhost")
+client = PydanticClient.from_toml("your_toml_path.toml") \
+    .bind_client(RequestsClient) \
+    .bind_protocol(WebClient) \
+    .build()
 
-    @group.get("/{book_id}")
-    def get(self, book_id: int) -> Book:  # type: ignore
+# or
+
+client: WebClient = PydanticClient(
+    ClientConfig(
+        base_url="https://example.com",
+        headers={"Authorization": "Bearer abcdefg"},
+        timeout=10
+    )
+).bind_client(RequestsClient) \
+    .bind_protocol(WebClient) \
+    .build()
+
+
+get_book: Book = client.get_book(1)
+
+# use the factory
+
+"""
+toml file example:
+[[tools.pydantic_client.factory]]
+name = "book_client
+base_url = "https://example.com/api/v1"
+timeout = 1
+[[tools.pydantic_client.factory]]
+name = "author_client
+base_url = "https://example.com/api/v2"
+timeout = 1
+[[tools.pydantic_client.factory]]
+name = "address_client
+base_url = "https://example.com/api/v3"
+timeout = 1
+"""
+
+class BookProtocol:
+    @get("/books/{book_id}?query={query}")
+    def get_book(self, book_id: int, query: str) -> Book:
+        ...
+    
+class AuthorProtocol:
+    @get("/books/{book_id}?query={query}")
+    def get_book(self, book_id: int, query: str) -> Book:
+        ...
+    
+class AddressProtocol:
+    @get("/books/{book_id}?query={query}")
+    def get_book(self, book_id: int, query: str) -> Book:
         ...
 
-    @person_group.get("/{person_id}")
-    def get_person(self, person_id: int) -> Person:  # type: ignore
-        ...
+factory = PydanticClientFactory.from_toml("pydantic_client.toml") \
+    .register_client("book_client", RequestsClient, BookProtocol) \
+    .register_client("author_client", HttpxClient, AuthorProtocol) \
+    .register_client("address_client", AIOHttpClient, AddressProtocol) \
+    .build()
 
-
-client = GroupClient()
-book = client.get(1)
-person = client.get_person(1)
-
-
+book: Book = factory.get_client(BookProtocol).get_book(1, "name")
+author: Book = factory.get_client(AuthorProtocol).get_book(1, "name")
 ```
 
 # change log
 
-### v0.1.14: add global or request level headers
+### v1.0.0: refactor all the code, to be simple. remove the group client.
 
-```python
+factory = PydanticClientFactory.from_toml("pydantic_client.toml") \
+    .register_client("book_client", RequestsClient, BookProtocol) \
+    .register_client("author_client", HttpxClient, AuthorProtocol) \
+    .register_client("address_client", AIOHttpClient, AddressProtocol) \
+    .build()
 
-# global level headers
-my_client = R("http://localhost/v1", headers={"Authorization": "xxxxxxx"})
-
-# request level headers, and its priority is higher than global. 
-
-# header should be xxxxxxx
-my_client.delete(1)
-# header should be zzzzz
-my_client.get(1, request_headers={"Authorization": "zzzzz"})
-# header should be yyyyy
-my_client.post(1, request_headers={"Authorization": "yyyyy"})
+book: Book = factory.get_client(BookProtocol).get_books(1)
 ```
 
-### v0.1.17: load config from toml to init client. 
+# change log
 
-```python
-
-# config.toml or pyproject.toml
-[tool.pydantic_client.config]
-base_url = "http://localhost/v1"
-headers.authorization = "xxxxxxx"
-headers.user = "xxxxxxx"
-
-client = R.load_config_from_toml("config.toml")
-
-
-```
+### v1.0.0: refactor all the code, to be simple. remove the group client.
