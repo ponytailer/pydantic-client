@@ -25,8 +25,9 @@ Only support the json response.
 from pydantic import BaseModel
 
 from pydantic_client import delete, get, post, put, PydanticClient
-from pydantic_client.clients.requests import RequestsClient
-from pydantic_client import ClientConfig
+from pydantic_client.clients import RequestsClient, AIOHttpClient, HttpxClient
+from pydantic_client import ClientConfig, PydanticClientFactory
+
 
 class Book(BaseModel):
     name: str
@@ -83,6 +84,61 @@ client: WebClient = PydanticClient(
 
 
 get_book: Book = client.get_book(1)
+
+# use the factory
+
+"""
+toml file example:
+[[tools.pydantic_client.factory]]
+name = "book_client
+base_url = "https://example.com/api/v1"
+timeout = 1
+[[tools.pydantic_client.factory]]
+name = "author_client
+base_url = "https://example.com/api/v2"
+timeout = 1
+[[tools.pydantic_client.factory]]
+name = "address_client
+base_url = "https://example.com/api/v3"
+timeout = 1
+"""
+
+class BookProtocol:
+    @get("/books/{book_id}?query={query}")
+    def get_book(self, book_id: int, query: str) -> Book:
+        ...
+    
+class AuthorProtocol:
+    @get("/books/{book_id}?query={query}")
+    def get_book(self, book_id: int, query: str) -> Book:
+        ...
+    
+class AddressProtocol:
+    @get("/books/{book_id}?query={query}")
+    def get_book(self, book_id: int, query: str) -> Book:
+        ...
+
+factory = PydanticClientFactory.from_toml("pydantic_client.toml") \
+    .register_client("book_client", RequestsClient, BookProtocol) \
+    .register_client("author_client", HttpxClient, AuthorProtocol) \
+    .register_client("address_client", AIOHttpClient, AddressProtocol) \
+    .build()
+
+book: Book = factory.get_client(BookProtocol).get_book(1, "name")
+author: Book = factory.get_client(AuthorProtocol).get_book(1, "name")
+```
+
+# change log
+
+### v1.0.0: refactor all the code, to be simple. remove the group client.
+
+factory = PydanticClientFactory.from_toml("pydantic_client.toml") \
+    .register_client("book_client", RequestsClient, BookProtocol) \
+    .register_client("author_client", HttpxClient, AuthorProtocol) \
+    .register_client("address_client", AIOHttpClient, AddressProtocol) \
+    .build()
+
+book: Book = factory.get_client(BookProtocol).get_books(1)
 ```
 
 # change log
