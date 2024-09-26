@@ -1,14 +1,12 @@
-from typing import Any, Type
+from typing import Any
 
 from requests import Session
 
 from pydantic_client.clients.abstract_client import AbstractClient
-from pydantic_client.proxy import ClientProxy, Proxy
 from pydantic_client.schema.http_request import HttpRequest
 
 
 class RequestsClient(AbstractClient):
-    runner_class: Type[Proxy] = ClientProxy
     session = Session()
 
     def do_request(self, request: HttpRequest) -> Any:

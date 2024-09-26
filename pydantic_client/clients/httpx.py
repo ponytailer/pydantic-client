@@ -1,13 +1,12 @@
-from typing import Any, Type
+from typing import Any
 
 from httpx import AsyncClient
+
 from pydantic_client.clients.abstract_client import AbstractClient
-from pydantic_client.proxy import AsyncClientProxy, Proxy
 from pydantic_client.schema.http_request import HttpRequest
 
 
 class HttpxClient(AbstractClient):
-    runner_class: Type[Proxy] = AsyncClientProxy
 
     async def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)

@@ -2,8 +2,6 @@ from typing import Any, Callable, Dict, Optional, Type
 
 from pydantic import BaseModel
 
-from pydantic_client.clients.abstract_client import AbstractClient
-
 
 class MethodInfo(BaseModel):
     func: Callable
@@ -12,6 +10,3 @@ class MethodInfo(BaseModel):
     request_type: Dict[str, Any]
     response_type: Optional[Type]
     form_body: bool
-
-    def __get__(self, instance: AbstractClient, objtype=None):
-        return instance.runner_class(instance, method_info=self)

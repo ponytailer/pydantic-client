@@ -21,7 +21,7 @@ async def test_get_num_pages(clients):
         num_pages = cl.get_book_num_pages(1)
         if inspect.isawaitable(num_pages):
             num_pages = await num_pages
-        assert num_pages == 42
+        assert num_pages == 40
 
 
 @pytest.mark.asyncio

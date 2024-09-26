@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from pydantic import BaseModel
 
@@ -7,6 +7,7 @@ class ClientConfig(BaseModel):
     base_url: str
     headers: Dict[str, Any] = {}
     http2: bool = False
+    timeout: Optional[int] = None
 
     @classmethod
     def load_toml(cls, path: str):
@@ -20,5 +21,6 @@ class ClientConfig(BaseModel):
             cfg = config.get("tools", {}) \
                 .get("pydantic-client", {}).get("config")
             if not cfg:
-                raise ValueError("`tools.pydantic-client.config` not found in toml file")  # noqa
+                raise ValueError(
+                    "`tools.pydantic-client.config` not found in toml file")  # noqa
             return cls(**cfg)

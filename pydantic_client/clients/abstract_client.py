@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Optional
 
 from pydantic_client.schema.client_config import ClientConfig
 from pydantic_client.schema.http_request import HttpRequest
@@ -8,11 +8,12 @@ class AbstractClient:
 
     def __init__(
         self, base_url: str, headers: Dict[str, Any] = None,
-        http2: bool = False
+        http2: bool = False, timeout: Optional[int] = None
     ):
         self.base_url = base_url.rstrip("/")
         self.headers = headers
         self.http2 = http2
+        self.timeout = timeout
 
     @staticmethod
     def data_encoder(x):
