@@ -1,4 +1,3 @@
-from pydantic_client import PydanticClient
 from pydantic_client.schema.client_config import FactoryConfig
 
 
@@ -54,6 +53,8 @@ class PydanticClientFactory:
         cfg = self.config.get_by_name(client_name)
         if not cfg:
             raise ValueError(f"client {client_name} not found in config")
+
+        from pydantic_client import PydanticClient
 
         client = PydanticClient(cfg)
 
