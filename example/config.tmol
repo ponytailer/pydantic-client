@@ -1,0 +1,13 @@
+[tools.pydantic-client.config]
+base_url = "http://localhost:5000"
+headers.authorization = "Bearer xxxxxx"
+timeout = 10
+
+[[tools.pydantic_client.factory]]
+name = "book_client
+base_url = "https://example.com/api/v1"
+timeout = 1
+[[tools.pydantic_client.factory]]
+name = "author_client
+base_url = "https://example.com/api/v2"
+timeout = 1
