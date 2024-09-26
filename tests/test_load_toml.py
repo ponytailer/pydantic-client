@@ -9,4 +9,4 @@ def test_load_toml():
 
     client = RequestsClient.from_toml(config)
     assert config.base_url == "http://localhost:12098"
-    assert client.headers == {"authorization": "Bearer xxxxxx"}
+    assert client.config.headers == {"authorization": "Bearer xxxxxx"}

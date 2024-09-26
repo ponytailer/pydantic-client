@@ -11,7 +11,7 @@ class AIOHttpClient(AbstractClient):
     async def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
         headers = request.request_headers if request.request_headers \
-            else self.headers
+            else self.config.headers
         async with ClientSession() as session:
             try:
                 req = session.request(
@@ -19,7 +19,8 @@ class AIOHttpClient(AbstractClient):
                     method=request.method,
                     json=json,
                     data=data,
-                    headers=headers
+                    headers=headers,
+                    timeout=self.config.timeout
                 )
 
                 async with req as resp:

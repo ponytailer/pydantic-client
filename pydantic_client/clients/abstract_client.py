@@ -6,18 +6,9 @@ from pydantic_client.schema.http_request import HttpRequest
 
 class AbstractClient:
 
-    def __init__(
-        self, base_url: str, headers: Dict[str, Any] = None,
-        http2: bool = False, timeout: Optional[int] = None
-    ):
-        self.base_url = base_url.rstrip("/")
-        self.headers = headers
-        self.http2 = http2
-        self.timeout = timeout
-
-    @staticmethod
-    def data_encoder(x):
-        return x
+    def __init__(self, config: ClientConfig):
+        self.config = config
+        self.base_url = config.base_url.rstrip("/")
 
     def do_request(self, request: HttpRequest) -> Any:
         raise NotImplementedError
@@ -32,4 +23,4 @@ class AbstractClient:
 
     @classmethod
     def from_toml(cls, toml_config: ClientConfig):
-        return cls(**toml_config.model_dump())
+        return cls(toml_config)

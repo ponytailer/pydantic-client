@@ -49,7 +49,7 @@ class PydanticClient:
         return cls(config=config)
 
     def bind_client(self, client_class: Type[AbstractClient]):
-        self.client = client_class(**self.config.model_dump())
+        self.client = client_class(self.config)
         return self
 
     def bind_protocol(self, protocol_class, *args, **kwargs):

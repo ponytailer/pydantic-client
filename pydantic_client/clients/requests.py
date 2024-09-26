@@ -12,7 +12,7 @@ class RequestsClient(AbstractClient):
     def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
         headers = request.request_headers if request.request_headers \
-            else self.headers
+            else self.config.headers
 
         try:
             return self.session.request(
@@ -20,7 +20,8 @@ class RequestsClient(AbstractClient):
                 method=request.method,
                 json=json,
                 data=data,
-                headers=headers
+                headers=headers,
+                timeout=self.config.timeout,
             ).json()
         except BaseException as e:
             raise e
