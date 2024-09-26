@@ -131,16 +131,3 @@ author: Book = factory.get_client(AuthorProtocol).get_book(1, "name")
 # change log
 
 ### v1.0.0: refactor all the code, to be simple. remove the group client.
-
-factory = PydanticClientFactory.from_toml("pydantic_client.toml") \
-    .register_client("book_client", RequestsClient, BookProtocol) \
-    .register_client("author_client", HttpxClient, AuthorProtocol) \
-    .register_client("address_client", AIOHttpClient, AddressProtocol) \
-    .build()
-
-book: Book = factory.get_client(BookProtocol).get_books(1)
-```
-
-# change log
-
-### v1.0.0: refactor all the code, to be simple. remove the group client.
