@@ -3,9 +3,10 @@ from pydantic_client.factory import PydanticClientFactory
 from pydantic_client.main import PydanticClient
 from pydantic_client.schema.client_config import ClientConfig
 
+pydantic_client_factory = PydanticClientFactory()
+
 __all__ = [
-    "PydanticClient",
-    "PydanticClientFactory",
+    "pydantic_client_factory",
     "ClientConfig",
     "patch",
     "get",

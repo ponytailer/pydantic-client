@@ -1,13 +1,30 @@
 import pytest
 
-from pydantic_client import delete, get, patch, post, put, PydanticClient
-from pydantic_client.clients.aiohttp import AIOHttpClient
-from pydantic_client.clients.httpx import HttpxClient
-from pydantic_client.clients.requests import RequestsClient
-from pydantic_client.factory import PydanticClientFactory
+from pydantic_client import delete, get, patch, post, put, \
+    ClientConfig, pydantic_client_factory
 from tests.book import Book
 
+server_url = "http://localhost:12098"
 
+config_1 = ClientConfig(
+    base_url=server_url,
+    timeout=10
+)
+
+config_2 = ClientConfig(
+    client_type="httpx",
+    base_url=server_url,
+    timeout=10
+)
+
+config_3 = ClientConfig(
+    client_type="aiohttp",
+    base_url=server_url,
+    timeout=10
+)
+
+
+@pydantic_client_factory.register(config_1)
 class R:
 
     @get("/books/{book_id}?query={query}")
@@ -41,6 +58,7 @@ class R:
         ...
 
 
+@pydantic_client_factory.register(config_3)
 class AsyncR:
     @get("/books/{book_id}?query={query}")
     async def get_book(self, book_id: int, query: str) -> Book:
@@ -73,6 +91,7 @@ class AsyncR:
         ...
 
 
+@pydantic_client_factory.register(config_2)
 class HttpxR(AsyncR):
     ...
 
@@ -108,26 +127,8 @@ def fastapi_server_url() -> str:
 
 @pytest.fixture
 def clients(fastapi_server_url):
-    client_1 = PydanticClient.from_toml("tests/config.toml") \
-        .bind_client(RequestsClient) \
-        .bind_protocol(R).build()
-
-    client_3 = PydanticClient.from_toml("tests/config.toml") \
-        .bind_client(HttpxClient) \
-        .bind_protocol(HttpxR).build()
-
-    client_2 = PydanticClient.from_toml("tests/config.toml") \
-        .bind_client(AIOHttpClient) \
-        .bind_protocol(AsyncR).build()
+    client_1 = pydantic_client_factory.get_client(R)
+    client_2 = pydantic_client_factory.get_client(AsyncR)
+    client_3 = pydantic_client_factory.get_client(HttpxR)
 
     yield client_1, client_2, client_3
-
-
-@pytest.fixture
-def factory(fastapi_server_url):
-    factory = PydanticClientFactory.from_toml("tests/config.toml") \
-        .register_client("book", RequestsClient, R) \
-        .register_client("book_2", HttpxClient, HttpxR) \
-        .build()
-
-    yield factory

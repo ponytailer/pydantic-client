@@ -1,9 +1,12 @@
 from typing import Any
 
-from aiohttp.client import ClientSession
-
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.schema.http_request import HttpRequest
+
+try:
+    from aiohttp.client import ClientSession
+except ImportError:
+    raise ImportError("Please install `aiohttp` to use AIOHttpClient")
 
 
 class AIOHttpClient(AbstractClient):

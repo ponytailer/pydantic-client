@@ -1,9 +1,12 @@
 from typing import Any
 
-from requests import Session
-
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.schema.http_request import HttpRequest
+
+try:
+    from requests import Session
+except ImportError:
+    raise ImportError("Please install `requests` to use RequestsClient")
 
 
 class RequestsClient(AbstractClient):

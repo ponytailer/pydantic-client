@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pydantic-client"
-version = "1.0.0"
+version = "1.0.1"
 description = "Http client base pydantic, with requests or aiohttp"
 authors = ["ponytailer <huangxiaohen2738@gmail.com>"]
 readme = "README.md"

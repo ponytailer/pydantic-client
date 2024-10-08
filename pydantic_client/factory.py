@@ -1,73 +1,36 @@
-from pydantic_client.schema.client_config import FactoryConfig
+from pydantic_client.schema.client_config import ClientConfig
 
 
 class PydanticClientFactory:
-    """
-    toml file example:
-    [[tools.pydantic_client.factory]]
-    name = "book_client
-    base_url = "https://example.com/api/v1"
-    timeout = 1
-    [[tools.pydantic_client.factory]]
-    name = "author_client
-    base_url = "https://example.com/api/v2"
-    timeout = 1
-    [[tools.pydantic_client.factory]]
-    name = "address_client
-    base_url = "https://example.com/api/v3"
-    timeout = 1
-
-    factory = PydanticClientFactory.from_toml("pydantic_client.toml") \
-        .register_client("book_client", RequestsClient, BookProtocol) \
-        .register_client("author_client", HttpxClient, AuthorProtocol)
-        .build()
-
-    book: Book = factory.get_client(BookProtocol).get_books(1)
-
-    """
-
-    def __init__(self, config: FactoryConfig):
+    def __init__(self):
         # name: client_class
         self.pydantic_clients = {}
-        self.config = config
+        # self.config = config
 
-    @classmethod
-    def from_toml(cls, toml_file: str) -> "PydanticClientFactory":
-        config = FactoryConfig.load_toml(toml_file)
-        return cls(config)
-
-    def register_client(
+    def register(
         self,
-        client_name: str,
-        client_class,
-        protocol_class,
-        *args,
-        **kwargs
+        client_config: ClientConfig
     ):
-        """
-        params:
-            client_name: str, name of the client which in toml file.
-            client_class: client class which in pydantic-client.
-            protocol_class: protocol class which define the routers.
-        """
-        cfg = self.config.get_by_name(client_name)
-        if not cfg:
-            raise ValueError(f"client {client_name} not found in config")
+        def wrapper(protocol_class):
+            from pydantic_client.main import PydanticClient
 
-        from pydantic_client import PydanticClient
+            client = PydanticClient(client_config)
 
-        client = PydanticClient(cfg)
+            self.pydantic_clients[protocol_class] = client \
+                .bind_client(client_config.get_client()) \
+                .bind_protocol(protocol_class) \
+                .build()
 
-        self.pydantic_clients[protocol_class] = client \
-            .bind_client(client_class) \
-            .bind_protocol(protocol_class, *args, **kwargs) \
-            .build()
-        return self
+            return protocol_class
 
-    def build(self):
-        return self
+        return wrapper
 
-    def get_client(self, protocol_class):
+    def get_client(self, protocol_class=None):
+        if len(self.pydantic_clients) == 1:
+            return self.pydantic_clients[list(self.pydantic_clients.keys())[0]]
+        if not protocol_class:
+            raise ValueError(
+                "Multiple clients exists, protocol_class is required")
         client = self.pydantic_clients.get(protocol_class)
         if not client:
             raise ValueError(f"client for {protocol_class} not found")
