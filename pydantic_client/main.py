@@ -43,11 +43,6 @@ class PydanticClient:
         self.client = None
         self.protocol = None
 
-    @classmethod
-    def from_toml(cls, toml_path: str) -> "PydanticClient":
-        config = ClientConfig.load_toml(toml_path)
-        return cls(config=config)
-
     def bind_client(self, client_class: Type[AbstractClient]):
         self.client = client_class(self.config)
         return self

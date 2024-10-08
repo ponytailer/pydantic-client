@@ -1,9 +1,12 @@
 from typing import Any
 
-from httpx import AsyncClient
-
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.schema.http_request import HttpRequest
+
+try:
+    from httpx import AsyncClient
+except ImportError:
+    raise ImportError("Please install `httpx` to use HttpxClient")
 
 
 class HttpxClient(AbstractClient):
