@@ -1,14 +1,17 @@
-from example.protocol import BookProtocol, Book
-from pydantic_client import PydanticClient, ClientConfig
-from pydantic_client.clients import RequestsClient
+from example.protocol import BookProtocol, Book, AuthorProtocol, Author
+from pydantic_client import pydantic_client_factory, ClientConfig
 
 if __name__ == "__main__":
     cfg = ClientConfig(
+        client_type="requests",
         base_url="https://example.com/api"
     )
-    client = PydanticClient(cfg) \
-        .bind_client(RequestsClient) \
-        .bind_protocol(BookProtocol) \
-        .build()
 
+    pydantic_client_factory.register(cfg)(BookProtocol)
+    pydantic_client_factory.register(cfg)(AuthorProtocol)
+
+    client = pydantic_client_factory.get_client(BookProtocol)
     book: Book = client.get_book(1, "name")
+
+    author_client = pydantic_client_factory.get_client(AuthorProtocol)
+    author: Author = author_client.get_author()
