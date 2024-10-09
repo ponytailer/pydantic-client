@@ -36,5 +36,5 @@ class BookProtocol:
 class AuthorProtocol:
 
     @get("/authors")
-    def get_author(self) -> Author:
+    async def get_author(self) -> Author:
         ...
