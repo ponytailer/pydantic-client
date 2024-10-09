@@ -1,7 +1,7 @@
 import pytest
 
 from pydantic_client import delete, get, patch, post, put, \
-    ClientConfig, pydantic_client_factory
+    ClientConfig, pydantic_client_manager, ClientType
 from tests.book import Book
 
 server_url = "http://localhost:12098"
@@ -12,19 +12,19 @@ config_1 = ClientConfig(
 )
 
 config_2 = ClientConfig(
-    client_type="httpx",
+    client_type=ClientType.httpx,
     base_url=server_url,
     timeout=10
 )
 
 config_3 = ClientConfig(
-    client_type="aiohttp",
+    client_type=ClientType.aiohttp,
     base_url=server_url,
     timeout=10
 )
 
 
-@pydantic_client_factory.register(config_1)
+@pydantic_client_manager.register(config_1)
 class R:
 
     @get("/books/{book_id}?query={query}")
@@ -58,7 +58,7 @@ class R:
         ...
 
 
-@pydantic_client_factory.register(config_3)
+@pydantic_client_manager.register(config_3)
 class AsyncR:
     @get("/books/{book_id}?query={query}")
     async def get_book(self, book_id: int, query: str) -> Book:
@@ -91,7 +91,7 @@ class AsyncR:
         ...
 
 
-@pydantic_client_factory.register(config_2)
+@pydantic_client_manager.register(config_2)
 class HttpxR(AsyncR):
     ...
 
@@ -127,8 +127,8 @@ def fastapi_server_url() -> str:
 
 @pytest.fixture
 def clients(fastapi_server_url):
-    client_1 = pydantic_client_factory.get_client(R)
-    client_2 = pydantic_client_factory.get_client(AsyncR)
-    client_3 = pydantic_client_factory.get_client(HttpxR)
+    client_1 = pydantic_client_manager.get(R)
+    client_2 = pydantic_client_manager.get(AsyncR)
+    client_3 = pydantic_client_manager.get(HttpxR)
 
     yield client_1, client_2, client_3

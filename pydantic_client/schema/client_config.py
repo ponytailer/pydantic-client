@@ -1,16 +1,23 @@
 import logging
-from typing import Dict, Any, Optional, Literal
+from enum import Enum
+from typing import Dict, Any, Optional
 
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
 
+class ClientType(str, Enum):
+    requests = "requests"
+    httpx = "httpx"
+    aiohttp = "aiohttp"
+
+
 class ClientConfig(BaseModel):
     # unique name for the client
     name: Optional[str] = None
     # requests, httpx, aiohttp
-    client_type: Literal["requests", "httpx", "aiohttp"] = "requests"
+    client_type: ClientType = ClientType.requests
     base_url: str
     headers: Dict[str, Any] = {}
     # only httpx support http2
@@ -18,10 +25,10 @@ class ClientConfig(BaseModel):
     timeout: Optional[int] = None
 
     def get_client(self):
-        if self.client_type == "requests":
+        if self.client_type.value == "requests":
             from pydantic_client.clients import RequestsClient
             return RequestsClient
-        elif self.client_type == "httpx":
+        elif self.client_type.value == "httpx":
             from pydantic_client.clients import HttpxClient
             return HttpxClient
         else:

@@ -24,7 +24,7 @@ Only support the json response.
 ```python
 from pydantic import BaseModel
 
-from pydantic_client import delete, get, post, put, pydantic_client_factory
+from pydantic_client import delete, get, post, put, pydantic_client_manager
 from pydantic_client import ClientConfig
 
 
@@ -33,9 +33,8 @@ class Book(BaseModel):
     age: int
 
 
-@pydantic_client_factory.register(
+@pydantic_client_manager.register(
     ClientConfig(
-        client_type="requests",
         base_url="https://example.com",
         headers={"Authorization": "Bearer abcdefg"},
         timeout=10
@@ -62,7 +61,7 @@ class WebClient:
         ...
 
 
-client = pydantic_client_factory.get_client()
+client = pydantic_client_manager.get()
 book: Book = client.get_book(1)
 
 ```
@@ -74,3 +73,5 @@ And see the examples to get more examples.
 ### v1.0.0: refactor all the code, to be simple. remove the group client.
 
 ### v1.0.1: simple to use.
+
+### v1.0.2: use enum to define the client type.
