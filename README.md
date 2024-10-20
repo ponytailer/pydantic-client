@@ -83,7 +83,7 @@ import aiohttp
 from pydantic_client import ClientConfig, ClientType
 
 client_config = ClientConfig(
-    client_type=ClientType.requests,
+    client_type=ClientType.aiohttp,
     base_url="https://example.com",
     headers={"Authorization": "Bearer abcdefg"},
     timeout=10,
