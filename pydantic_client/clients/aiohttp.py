@@ -12,7 +12,7 @@ except ImportError:
 class AIOHttpClient(AbstractClient):
 
     def get_session(self) -> Callable[[], ClientSession]:
-        session = self.config.client_session
+        session = super().get_session()
         return lambda: ClientSession() if not session else session()
 
     async def do_request(self, request: HttpRequest) -> Any:
