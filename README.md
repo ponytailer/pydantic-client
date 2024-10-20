@@ -75,3 +75,20 @@ And see the examples to get more examples.
 ### v1.0.1: simple to use.
 
 ### v1.0.2: use enum to define the client type.
+
+### v1.0.3: you can define the your own client session in `client_config`
+
+```python
+import aiohttp
+from pydantic_client import ClientConfig, ClientType
+
+client_config = ClientConfig(
+    client_type=ClientType.requests,
+    base_url="https://example.com",
+    headers={"Authorization": "Bearer abcdefg"},
+    timeout=10,
+    session=lambda: aiohttp.ClientSession()
+)
+
+
+```

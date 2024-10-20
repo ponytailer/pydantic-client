@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Callable
 
 from pydantic import BaseModel
 
@@ -23,6 +23,7 @@ class ClientConfig(BaseModel):
     # only httpx support http2
     http2: bool = False
     timeout: Optional[int] = None
+    client_session: Optional[Callable[[], Any]] = None
 
     def get_client(self):
         if self.client_type.value == "requests":

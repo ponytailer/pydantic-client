@@ -1,4 +1,7 @@
 import pytest
+from aiohttp import ClientSession
+from httpx import AsyncClient
+from requests import Session
 
 from pydantic_client import delete, get, patch, post, put, \
     ClientConfig, pydantic_client_manager, ClientType
@@ -21,6 +24,26 @@ config_3 = ClientConfig(
     client_type=ClientType.aiohttp,
     base_url=server_url,
     timeout=10
+)
+
+config_4 = ClientConfig(
+    client_type=ClientType.aiohttp,
+    base_url=server_url,
+    timeout=10,
+    client_session=lambda: ClientSession()
+)
+
+config_5 = ClientConfig(
+    client_type=ClientType.httpx,
+    base_url=server_url,
+    timeout=10,
+    client_session=lambda: AsyncClient()
+)
+config_6 = ClientConfig(
+    client_type=ClientType.requests,
+    base_url=server_url,
+    timeout=10,
+    client_session=lambda: Session()
 )
 
 
@@ -96,6 +119,21 @@ class HttpxR(AsyncR):
     ...
 
 
+@pydantic_client_manager.register(config_4)
+class AsyncWithSession(AsyncR):
+    ...
+
+
+@pydantic_client_manager.register(config_5)
+class HttpxWithSession(HttpxR):
+    ...
+
+
+@pydantic_client_manager.register(config_6)
+class RequestsWithSession(R):
+    ...
+
+
 @pytest.fixture(scope="session")
 def fastapi_server_url() -> str:
     from uvicorn import run
@@ -130,5 +168,8 @@ def clients(fastapi_server_url):
     client_1 = pydantic_client_manager.get(R)
     client_2 = pydantic_client_manager.get(AsyncR)
     client_3 = pydantic_client_manager.get(HttpxR)
+    client_4 = pydantic_client_manager.get(AsyncWithSession)
+    client_5 = pydantic_client_manager.get(HttpxWithSession)
+    client_6 = pydantic_client_manager.get(RequestsWithSession)
 
-    yield client_1, client_2, client_3
+    yield client_1, client_2, client_3, client_4, client_5, client_6

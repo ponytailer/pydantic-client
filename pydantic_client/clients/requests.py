@@ -12,13 +12,19 @@ except ImportError:
 class RequestsClient(AbstractClient):
     session = Session()
 
+    def get_session(self) -> Session:
+        session = super().get_session()
+        if session and isinstance(session, Session):
+            return session
+        return self.session
+
     def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
         headers = request.request_headers if request.request_headers \
             else self.config.headers
 
         try:
-            return self.session.request(
+            return self.get_session().request(
                 url=self.base_url + request.url,
                 method=request.method,
                 json=json,
