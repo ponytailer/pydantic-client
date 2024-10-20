@@ -11,11 +11,18 @@ except ImportError:
 
 class HttpxClient(AbstractClient):
 
+    def get_session(self):
+        session = super().get_session()
+        if session and isinstance(session, AsyncClient):
+            return session
+        return AsyncClient(http2=self.config.http2)
+
     async def do_request(self, request: HttpRequest) -> Any:
         data, json = self.parse_request(request)
         headers = request.request_headers if request.request_headers \
             else self.config.headers
-        async with AsyncClient(http2=self.config.http2) as session:
+
+        async with self.get_session() as session:
             try:
                 response = await session.request(
                     url=self.base_url + request.url,

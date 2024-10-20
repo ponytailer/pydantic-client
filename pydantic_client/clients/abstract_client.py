@@ -10,6 +10,9 @@ class AbstractClient:
         self.config = config
         self.base_url = config.base_url.rstrip("/")
 
+    def get_session(self):
+        return self.config.client_session
+
     def do_request(self, request: HttpRequest) -> Any:
         raise NotImplementedError
 
