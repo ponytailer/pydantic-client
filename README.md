@@ -57,12 +57,16 @@ class WebClient:
         ...
 
     @delete("/books/{book_id}")
-    def change_book(self, book_id: int) -> Book:
+    def change_book(self, book_id: int, request_headers: dict = None) -> Book:
         ...
 
 
 client = pydantic_client_manager.get()
+# will get the book with book_id=1
 book: Book = client.get_book(1)
+
+# request_headers will overwrite the headers in client_config
+client.change_book(1, request_headers={"Authorization": "Bearer abcdefg"})
 
 ```
 

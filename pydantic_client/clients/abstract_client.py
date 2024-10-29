@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple, Optional
+from typing import Any, Dict, Tuple
 
 from pydantic_client.schema.client_config import ClientConfig
 from pydantic_client.schema.http_request import HttpRequest
