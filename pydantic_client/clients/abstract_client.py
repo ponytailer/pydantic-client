@@ -23,7 +23,7 @@ class AbstractClient:
             data, json = None, request.json_body
         headers = request.request_headers if request.request_headers \
             else self.config.headers
-        url = self.base_url + request.url,
+        url = self.base_url + request.url
         return dict(url=url, data=data, json=json, headers=headers,
                     method=request.method, timeout=self.config.timeout)
 
