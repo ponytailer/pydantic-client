@@ -1,21 +1,27 @@
+import logging
+
 from pydantic_client.container import container
 from pydantic_client.schema.client_config import ClientConfig
+
+logger = logging.getLogger(__name__)
 
 
 class PydanticClientManager:
     def __init__(self):
-        # proto_class
+        # proto_class: protocol_object
         self.pydantic_clients = {}
-        # self.config = config
 
     def register(
         self,
         client_config: ClientConfig
     ):
         def wrapper(protocol_class):
-            web_client = client_config.get_client()(client_config)
+            web_client = client_config.get_client()
             protocol = protocol_class()
             container.bind_protocol(protocol, web_client)
+            if protocol_class in self.pydantic_clients:
+                logger.warning(
+                    f"protocol {protocol_class} already registered, will be overwritten")
             self.pydantic_clients[protocol_class] = protocol
             return protocol_class
 

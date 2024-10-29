@@ -13,7 +13,7 @@ class AbstractClient:
     def get_session(self):
         return self.config.client_session
 
-    def do_request(self, request: HttpRequest) -> Any:
+    def do_request(self, request: HttpRequest) -> Dict[str, Any]:
         raise NotImplementedError
 
     def parse(self, request: HttpRequest) -> Dict[str, Any]:

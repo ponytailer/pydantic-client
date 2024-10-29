@@ -28,13 +28,13 @@ class ClientConfig(BaseModel):
     def get_client(self):
         if self.client_type.value == "requests":
             from pydantic_client.clients import RequestsClient
-            return RequestsClient
+            return RequestsClient(self)
         elif self.client_type.value == "httpx":
             from pydantic_client.clients import HttpxClient
-            return HttpxClient
+            return HttpxClient(self)
         else:
             from pydantic_client.clients import AIOHttpClient
-            return AIOHttpClient
+            return AIOHttpClient(self)
 
     @classmethod
     def load_toml(cls, path: str):
