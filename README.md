@@ -70,9 +70,11 @@ client.change_book(1, request_headers={"Authorization": "Bearer abcdefg"})
 
 ```
 
-And see the examples to get more examples.
+And see the examples.
 
-# change log
+
+<details>
+<summary> Change Log </summary>
 
 ### v1.0.0: refactor all the code, to be simple. remove the group client.
 
@@ -96,3 +98,4 @@ client_config = ClientConfig(
 
 
 ```
+</details>

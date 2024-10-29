@@ -16,23 +16,11 @@ class AIOHttpClient(AbstractClient):
         return lambda: ClientSession() if not session else session()
 
     async def do_request(self, request: HttpRequest) -> Any:
-        data, json = self.parse_request(request)
-        headers = request.request_headers if request.request_headers \
-            else self.config.headers
-
         session_factory = self.get_session()
         s = session_factory()
         async with s as session:
             try:
-                req = session.request(
-                    url=self.base_url + request.url,
-                    method=request.method,
-                    json=json,
-                    data=data,
-                    headers=headers,
-                    timeout=self.config.timeout
-                )
-
+                req = session.request(**self.parse(request))
                 async with req as resp:
                     resp.raise_for_status()
                     if resp.status == 200:
