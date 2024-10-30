@@ -52,7 +52,10 @@ def rest(
             if not rt:
                 return value
             if isinstance(rt, ModelMetaclass):
-                return target_type(**value)
+                try:
+                   return target_type.model_validate(value, from_attributes=True)
+                except:
+                   return target_type(**value)
             try:
                 return target_type(value)
             except Exception as e:
