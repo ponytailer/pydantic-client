@@ -5,6 +5,9 @@
 Http client base pydantic, with requests, aiohttp and httpx.
 Only support the json response.
 
+
+#### If you like this project, please give me a star.
+
 ### How to install
 
 > only support `requests`:
@@ -82,7 +85,7 @@ And see the examples.
 
 ### v1.0.2: use enum to define the client type.
 
-### v1.0.3: you can define the your own client session in `client_config`
+### v1.0.3: you can define your own client session in `client_config`
 
 ```python
 import aiohttp
