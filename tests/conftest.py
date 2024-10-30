@@ -5,6 +5,7 @@ from requests import Session
 
 from pydantic_client import delete, get, patch, post, put, \
     ClientConfig, pydantic_client_manager, ClientType
+from pydantic_client.schema.file import File
 from tests.book import Book
 
 server_url = "http://localhost:12098"
@@ -80,6 +81,10 @@ class R:
     def patch_book(self, book_id: int, book: Book) -> Book:
         ...
 
+    @post("/books/file")
+    def download(self) -> File:
+        ...
+
 
 @pydantic_client_manager.register(config_3)
 class AsyncR:
@@ -111,6 +116,10 @@ class AsyncR:
 
     @patch("/books/{book_id}")
     async def patch_book(self, book_id: int, book: Book) -> Book:
+        ...
+
+    @post("/books/file")
+    async def download(self) -> File:
         ...
 
 

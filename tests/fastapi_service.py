@@ -1,8 +1,8 @@
 import json
 
-from typing_extensions import Annotated
-
 from fastapi import FastAPI, Form
+from starlette.responses import FileResponse
+from typing_extensions import Annotated
 
 from tests.book import Book, get_the_book
 
@@ -25,7 +25,8 @@ def get_book_num_pages(book_id: int) -> str:
 
 
 @app.post("/books")
-def create_book_form(name: Annotated[str, Form()], age: Annotated[int, Form()]) -> Book:
+def create_book_form(name: Annotated[str, Form()],
+    age: Annotated[int, Form()]) -> Book:
     return Book(name=name, age=age)
 
 
@@ -42,3 +43,8 @@ def delete_book(book_id: int) -> Book:
 @app.patch("/books/{book_id}")
 def patch_book(book_id: int, book: Book) -> Book:
     return book
+
+
+@app.post("/books/file")
+def download_book():
+    return FileResponse("tests/book.txt")

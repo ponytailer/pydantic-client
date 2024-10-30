@@ -71,3 +71,12 @@ async def test_patch(clients):
         if inspect.isawaitable(book):
             book = await book
         assert book == book_to_send
+
+
+@pytest.mark.asyncio
+async def test_download_file(clients):
+    for cl in clients:
+        content = cl.download()
+        if inspect.isawaitable(content):
+            content = await content
+        assert content == b"test"

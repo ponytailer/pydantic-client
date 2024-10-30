@@ -1,6 +1,8 @@
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Dict, Optional, Type, Union
 
 from pydantic import BaseModel
+
+from pydantic_client.schema.file import File
 
 
 class MethodInfo(BaseModel):
