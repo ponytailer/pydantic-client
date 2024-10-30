@@ -16,6 +16,15 @@ async def test_get(clients):
 
 
 @pytest.mark.asyncio
+async def test_get(clients):
+    for cl in clients:
+        book = cl.get_books()
+        if inspect.isawaitable(book):
+            book = await book
+        assert book == ["1", "2"]
+
+
+@pytest.mark.asyncio
 async def test_get_num_pages(clients):
     for cl in clients:
         num_pages = cl.get_book_num_pages(1)
@@ -71,3 +80,12 @@ async def test_patch(clients):
         if inspect.isawaitable(book):
             book = await book
         assert book == book_to_send
+
+
+@pytest.mark.asyncio
+async def test_download_file(clients):
+    for cl in clients:
+        content = cl.download()
+        if inspect.isawaitable(content):
+            content = await content
+        assert content == b"test"

@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.schema.http_request import HttpRequest
@@ -16,8 +16,10 @@ class RequestsClient(AbstractClient):
         session = super().get_session()
         return session if isinstance(session, Session) else self.session
 
-    def do_request(self, request: HttpRequest) -> Dict[str, Any]:
+    def do_request(self, request: HttpRequest) -> Any:
         try:
-            return self.get_session().request(**self.parse(request)).json()
+            response = self.get_session().request(**self.parse(request))
+            response.raise_for_status()
+            return response.json() if not request.is_file else response.content
         except BaseException as e:
             raise e

@@ -14,7 +14,7 @@ logger = logging.getLogger("pydantic_client.parser")
 
 
 class Parser:
-    querystring_pattern = re.compile(r"\{(.*?)\}")
+    querystring_pattern = re.compile(r"{(.*?)}")
 
     @staticmethod
     def _apply_args(
@@ -59,7 +59,10 @@ class Parser:
 
     @staticmethod
     def get_request(method_info: MethodInfo, *args, **kwargs):
-        func_args: Dict[str, Any] = Parser._apply_args(method_info, *args, **kwargs)
+        # get the function the value of args
+        func_args: Dict[str, Any] = Parser._apply_args(
+            method_info, *args, **kwargs)
+        # format url and render the querystring
         url: str = Parser._get_url(method_info, func_args)
 
         body = Parser.dict_to_body(func_args)
@@ -75,7 +78,8 @@ class Parser:
             data=data,
             json_body=json,
             method=method_info.http_method,
-            request_headers=request_headers
+            request_headers=request_headers,
+            is_file=method_info.response_type is bytes
         )
 
 

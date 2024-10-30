@@ -6,6 +6,7 @@ from typing import Callable
 from pydantic._internal._model_construction import ModelMetaclass
 
 from pydantic_client.container import container
+from pydantic_client.schema.file import File
 from pydantic_client.schema.method_info import MethodInfo
 
 logger = logging.getLogger(__name__)
@@ -51,11 +52,10 @@ def rest(
             rt = method_info.response_type
             if not rt:
                 return value
+            if isinstance(rt, File) and isinstance(value, bytes):
+                return value
             if isinstance(rt, ModelMetaclass):
-                try:
-                   return target_type.model_validate(value, from_attributes=True)
-                except:
-                   return target_type(**value)
+                return target_type.model_validate(value, from_attributes=True)
             try:
                 return target_type(value)
             except Exception as e:

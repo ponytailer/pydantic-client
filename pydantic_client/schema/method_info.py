@@ -2,6 +2,8 @@ from typing import Any, Callable, Dict, Optional
 
 from pydantic import BaseModel
 
+from pydantic_client.schema.file import File
+
 
 class MethodInfo(BaseModel):
     func: Callable

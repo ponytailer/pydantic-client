@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict
+from typing import Any, Callable
 
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.schema.http_request import HttpRequest
@@ -15,7 +15,7 @@ class AIOHttpClient(AbstractClient):
         session = super().get_session()
         return lambda: ClientSession() if not session else session()
 
-    async def do_request(self, request: HttpRequest) -> Dict[str, Any]:
+    async def do_request(self, request: HttpRequest) -> Any:
         session_factory = self.get_session()
         s = session_factory()
         async with s as session:
@@ -24,6 +24,8 @@ class AIOHttpClient(AbstractClient):
                 async with req as resp:
                     resp.raise_for_status()
                     if resp.status == 200:
-                        return await resp.json()
+                        if not request.is_file:
+                            return await resp.json()
+                        return await resp.content.read()
             except BaseException as e:
                 raise e
