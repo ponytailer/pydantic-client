@@ -1,4 +1,5 @@
 import pytest
+import typing
 from aiohttp import ClientSession
 from httpx import AsyncClient
 from requests import Session
@@ -12,7 +13,6 @@ server_url = "http://localhost:12098"
 
 config_1 = ClientConfig(
     base_url=server_url,
-    timeout=10
 )
 
 config_2 = ClientConfig(
@@ -51,6 +51,10 @@ config_6 = ClientConfig(
 @pydantic_client_manager.register(config_1)
 class R:
 
+    @get("/book_list")
+    def get_books(self) -> typing.List:
+        ...
+
     @get("/books/{book_id}?query={query}")
     def get_book(self, book_id: int, query: str) -> Book:
         ...
@@ -88,6 +92,11 @@ class R:
 
 @pydantic_client_manager.register(config_3)
 class AsyncR:
+
+    @get("/book_list")
+    async def get_books(self) -> typing.List:
+        ...
+
     @get("/books/{book_id}?query={query}")
     async def get_book(self, book_id: int, query: str) -> Book:
         ...
@@ -150,7 +159,6 @@ def fastapi_server_url() -> str:
     from threading import Thread
     host = "localhost"
     port = 12098  # TODO: add port availability check
-
     def start_server():
         run(app, host=host, port=port)
 

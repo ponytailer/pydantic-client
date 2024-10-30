@@ -1,4 +1,5 @@
 import json
+import typing
 
 from fastapi import FastAPI, Form
 from starlette.responses import FileResponse
@@ -12,6 +13,11 @@ app = FastAPI()
 @app.get("/books/{book_id}?query={query}")
 async def get() -> Book:
     return get_the_book()
+
+
+@app.get("/book_list")
+async def get_list() -> typing.List:
+    return ["1", "2"]
 
 
 @app.get("/books/{book_id}")
