@@ -73,9 +73,6 @@ class Parser:
         else:
             data, json = {}, body
 
-        print(method_info.response_type, '!!!!!!!!')
-        print(method_info.response_type is bytes)
-
         return HttpRequest(
             url=url,
             data=data,
