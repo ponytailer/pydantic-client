@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from pydantic_client.clients.abstract_client import AbstractClient
 from pydantic_client.schema.http_request import HttpRequest
@@ -16,12 +16,14 @@ class HttpxClient(AbstractClient):
         return session if isinstance(session, AsyncClient) \
             else AsyncClient(http2=self.config.http2)
 
-    async def do_request(self, request: HttpRequest) -> Dict[str, Any]:
+    async def do_request(self, request: HttpRequest) -> Any:
         async with self.get_session() as session:
             try:
                 response = await session.request(**self.parse(request))
                 response.raise_for_status()
                 if response.is_success:
-                    return response.json()
+                    if not request.is_file:
+                        return response.json()
+                    return response.read()
             except BaseException as e:
                 raise e

@@ -9,3 +9,4 @@ class HttpRequest(BaseModel):
     url: str
     method: str
     request_headers: Optional[Dict] = None
+    is_file: bool = False

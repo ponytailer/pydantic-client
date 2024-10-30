@@ -6,6 +6,7 @@ from typing import Callable
 from pydantic._internal._model_construction import ModelMetaclass
 
 from pydantic_client.container import container
+from pydantic_client.schema.file import File
 from pydantic_client.schema.method_info import MethodInfo
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,9 @@ def rest(
         def convert(value, target_type):
             rt = method_info.response_type
             if not rt:
+                return value
+
+            if isinstance(rt, File) and isinstance(value, bytes):
                 return value
             if isinstance(value, dict) and isinstance(rt, ModelMetaclass):
                 return target_type(**value)
