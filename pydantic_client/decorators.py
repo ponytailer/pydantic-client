@@ -51,7 +51,7 @@ def rest(
             rt = method_info.response_type
             if not rt:
                 return value
-            if isinstance(rt, ModelMetaclass):
+            if isinstance(value, dict) and isinstance(rt, ModelMetaclass):
                 return target_type(**value)
             try:
                 return target_type(value)
