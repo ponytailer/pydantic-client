@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Dict, Optional
 
 from pydantic import BaseModel
 
@@ -8,5 +8,5 @@ class MethodInfo(BaseModel):
     http_method: str
     url: str
     request_type: Dict[str, Any]
-    response_type: Optional[Type]
+    response_type: Optional[Any]
     form_body: bool
