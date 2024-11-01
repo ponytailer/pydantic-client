@@ -52,11 +52,10 @@ def rest(
             rt = method_info.response_type
             if not rt:
                 return value
-
             if isinstance(rt, File) and isinstance(value, bytes):
                 return value
-            if isinstance(value, dict) and isinstance(rt, ModelMetaclass):
-                return target_type(**value)
+            if isinstance(rt, ModelMetaclass):
+                return target_type.model_validate(value, from_attributes=True)
             try:
                 return target_type(value)
             except Exception as e:
