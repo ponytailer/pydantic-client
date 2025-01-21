@@ -54,6 +54,8 @@ class Parser:
     def dict_to_body(func_args: Dict[str, Any]) -> Dict:
         keys = list(func_args.keys())
         if len(keys) == 1:
+            if keys[0] == "request_headers":
+                return func_args
             return func_args[keys[0]]
         return {}
 
