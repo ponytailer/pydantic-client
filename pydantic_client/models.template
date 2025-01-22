@@ -1,0 +1,16 @@
+from typing import Optional
+from pydantic import BaseModel
+{% for model_name, fields in models.items() %}
+
+class {{model_name}}(BaseModel):
+    {% for field in fields -%}
+    {{ field }}
+    {% endfor %}
+{% endfor %}
+
+class WebClient:
+    {% for entity in info %}
+    @{{entity.method}}("{{entity.path}}")
+    def {{entity.function_name}}(self{%if entity.args%}, {%endif%}{{entity.args}}):
+        ...
+    {% endfor %}
