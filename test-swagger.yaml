@@ -1,0 +1,162 @@
+openapi: 3.0.0
+info:
+  title: FastAPI
+  version: 0.1.0
+paths:
+  /fmea-agent/v1/hello:
+    get:
+      summary: Hello
+      operationId: hello_fmea_agent_v1_hello_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: string
+  /fmea-agent/v1/function_analysis:
+    post:
+      summary: Function Analysis
+      operationId: function_analysis_fmea_agent_v1_function_analysis_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FunctionAnalysisRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: { }
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /fmea-agent/v1/lose_effect_analysis/{lose_id}:
+    post:
+      summary: Lose Effect Analysis
+      description: this is the description for api
+      operationId: lose_effect_analysis_fmea_agent_v1_lose_effect_analysis_post
+      parameters:
+        - name: lose_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoseEffectRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoseEffectResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    FunctionAnalysisRequest:
+      properties:
+        project_name:
+          type: string
+          title: Project Name
+        struct_code:
+          type: string
+          title: Struct Code
+        struct_level_code:
+          type: string
+          title: Struct Level Code
+        struct_name:
+          type: string
+          title: Struct Name
+        function_type:
+          type: string
+          enum:
+            - project
+            - basic
+          title: Function Type
+          default: project
+      type: object
+      required:
+        - struct_name
+      title: FunctionAnalysisRequest
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    LoseEffectRequest:
+      properties:
+        struct_name:
+          type: string
+          title: Struct Name
+        function_description:
+          type: string
+          title: Function Description
+      type: object
+      required:
+        - struct_name
+        - function_description
+      title: LoseEffectRequest
+    LoseEffectResponse:
+      properties:
+        failure_type_code:
+          type: string
+          title: Failure Type Code
+        failure_description:
+          type: string
+          title: Failure Description
+      type: object
+      required:
+        - failure_type_code
+        - failure_description
+      title: LoseEffectResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError
