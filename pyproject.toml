@@ -20,6 +20,8 @@ requests = "*"
 
 aiohttp = { version = "*", optional = true }
 httpx = { version = "*", extras = ["http2"], optional = true }
+openapi-spec-validator = "^0.7.1"
+jinja2 = "^3.1.5"
 
 [tool.poetry.extras]
 httpx = ["httpx"]

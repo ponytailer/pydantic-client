@@ -45,7 +45,19 @@ paths:
   /fmea-agent/v1/lose_effect_analysis/{lose_id}:
     post:
       summary: Lose Effect Analysis
-      description: this is the description for api
+      description: |-
+        :param
+            pluginId: str
+            params: {
+                "struct_name": "车身",  // 结构名称
+                "function_description": "强度和耐久 Strength & Endurance"
+            }
+        :return: [
+            {"failure_type_code": "潜在失效", "failure_name": "压力超过，无法启动",
+            {"failure_type_code": "长期失效", "failure_name": "无法启动",
+        ]
+        根据 结构名称 + 功能描述 去问题+失效向量库里寻找匹配的失效分析，
+        然后生成对应的失效分析结果。
       operationId: lose_effect_analysis_fmea_agent_v1_lose_effect_analysis_post
       parameters:
         - name: lose_id
