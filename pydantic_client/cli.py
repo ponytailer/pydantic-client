@@ -5,10 +5,13 @@ from typing import Optional
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from pydantic import BaseModel
+from typer import Typer
 
 all_models = {}
 
 logger = logging.getLogger(__name__)
+
+cli_app = Typer()
 
 
 class RequestEntity(BaseModel):
@@ -74,7 +77,7 @@ def convert_request_name(name: str):
             s.append(k.lower())
         else:
             s.append(k)
-    return "".join(s[1:])
+    return "".join(s[1:]) if s[0] == "_" else "".join(s)
 
 
 def parse_swagger_and_generate_models(swagger_path):
@@ -151,14 +154,16 @@ def parse_swagger_and_generate_models(swagger_path):
     for path, values in path_pairs.items():
         for value in values:
             value["path"] = path
+            value["function_name"] = value["function_name"].replace("-", "_")
             ret.append(RequestEntity(**value))
     return ret
 
 
-def handle_swagger_file(path: str, model_file_name: str = ""):
+@cli_app.command()
+def parse(path: str, model_file_name: str = ""):
     import jinja2
     results = parse_swagger_and_generate_models(path)
-    tmpl = jinja2.Template(open("models.template").read())
+    tmpl = jinja2.Template(open("pydantic_client/models.template").read())
     render_fields = {}
 
     for key, value in all_models.items():
@@ -181,3 +186,7 @@ def handle_swagger_file(path: str, model_file_name: str = ""):
                 f.write(model_string)
         else:
             print(model_string)
+
+
+if __name__ == "__main__":
+    cli_app()
