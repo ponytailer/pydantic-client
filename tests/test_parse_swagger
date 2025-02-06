@@ -1,0 +1,8 @@
+import os
+
+from pydantic_client.cli import parse
+
+
+def test_parse_swagger():
+    parse("tests/test-swagger.yaml", "tests/client.py")
+    assert os.path.isfile("tests/client.py")
