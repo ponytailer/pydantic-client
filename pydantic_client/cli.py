@@ -46,7 +46,7 @@ def generate_pydantic_model(schema, model_name):
             simple_fields[field_name] = map_type_to_string(
                 field_type)
 
-        if field_name in required_fields:
+        if field_name not in required_fields:
             simple_fields[field_name] = f"Optional[{simple_fields[field_name]}]"
 
     if simple_fields:
