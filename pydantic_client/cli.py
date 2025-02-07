@@ -164,20 +164,18 @@ def parse(path: str, model_file_name: str = ""):
     import jinja2
     results = parse_swagger_and_generate_models(path)
     tmpl = jinja2.Template(open("pydantic_client/models.template").read())
-    render_fields = {}
-
-    for key, value in all_models.items():
-        fields = [
+    render_fields = {
+        key: [
             f"{field}: {ftype}"
             for field, ftype in value.items()
-        ]
-        render_fields[key] = fields
-        for entity in results:
-            args = ", ".join([
-                f"{name}: {type_}"
-                for name, type_ in entity.arg_dict.items()
-            ])
-            entity.args = args
+        ] for key, value in all_models.items()
+    }
+    for entity in results:
+        args = ", ".join([
+            f"{name}: {type_}"
+            for name, type_ in entity.arg_dict.items()
+        ])
+        entity.args = args
 
     if render_fields:
         model_string = tmpl.render(models=render_fields, info=results)
