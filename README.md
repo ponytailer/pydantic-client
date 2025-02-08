@@ -78,22 +78,59 @@ And see the examples.
 <details>
 <summary> Change Log </summary>
 
-### v1.0.3: you can define your own client session in `client_config`
+### v1.0.7: genearte client and schema code from swagger
+
+```shell
+pydantic-client parse your-swagger-file.yaml
+```
+you will get the code from output, above:
 
 ```python
-import aiohttp
-from pydantic_client import ClientConfig, ClientType
-
-client_config = ClientConfig(
-    client_type=ClientType.aiohttp,
-    base_url="https://example.com",
-    headers={"Authorization": "Bearer abcdefg"},
-    timeout=10,
-    session=lambda: aiohttp.ClientSession()
-)
+from typing import Optional
+from pydantic import BaseModel
 
 
+class FunctionAnalysisRequest(BaseModel):
+    project_name: str
+    struct_code: str
+    struct_level_code: str
+    struct_name: Optional[str]
+    function_type: str
+
+
+
+class HTTPValidationError(BaseModel):
+    detail: list[str]
+
+
+
+class LoseEffectRequest(BaseModel):
+    struct_name: Optional[str]
+    function_description: Optional[str]
+
+
+
+class LoseEffectResponse(BaseModel):
+    failure_type_code: Optional[str]
+    failure_description: Optional[str]
+
+
+class WebClient:
+
+    @get("/fmea-agent/v1/hello")
+    def get_fmea_agent_v1_hello(self):
+        ...
+
+    @post("/fmea-agent/v1/function_analysis")
+    def post_fmea_agent_v1_function_analysis(self, function_analysis_request: FunctionAnalysisRequest):
+        ...
+
+    @post("/fmea-agent/v1/lose_effect_analysis/{lose_id}")
+    def post_fmea_agent_v1_lose_effect_analysis(self, lose_id: int, name: Optional[str], lose_effect_request: LoseEffectRequest):
+        ...
 ```
+
+
 ### v1.0.5: support file response type.
 
 ```python
