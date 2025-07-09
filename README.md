@@ -28,14 +28,25 @@ pip install pydantic-client
 ## Quick Start
 
 ```python
+from typing import List
 from pydantic import BaseModel
-from pydantic_client import RequestsWebClient, get, post
+from pydantic_client import RequestsWebClient, get, post, put
 
 # Define your response models
 class UserResponse(BaseModel):
     id: int
     name: str
     email: str
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    age: int
+
+class UserUpdate(BaseModel):
+    name: str
+    email: str
+    age: int
 
 # Create your API client
 class MyAPIClient(RequestsWebClient):
@@ -74,20 +85,60 @@ The library provides decorators for common HTTP methods:
 - `@patch(path)`
 - `@delete(path)`
 
-## Path Parameters
+## Request Parameters
 
-Path parameters are automatically extracted from the URL template and matched with method arguments:
+The library supports several ways to pass parameters:
 
+1. Path Parameters:
 ```python
-@get("users/{user_id}/posts/{post_id}")
-def get_user_post(self, user_id: int, post_id: int) -> PostResponse:
+@get("users/{user_id}")
+def get_user(self, user_id: int) -> UserResponse:
     pass
 ```
 
-## Request Parameters
+2. Query Parameters (for GET and DELETE methods):
+```python
+@get("users")
+def list_users(self, page: int, limit: int = 10) -> List[UserResponse]:
+    pass
+```
 
-- For GET and DELETE methods, remaining arguments are sent as query parameters
-- For POST, PUT, and PATCH methods, remaining arguments are sent in the request body as JSON
+3. Pydantic Models as JSON Body (for POST, PUT, and PATCH methods):
+```python
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    age: int
+
+@post("users")
+def create_user(self, user: UserCreate) -> UserResponse:
+    pass
+```
+
+4. Form Data with Pydantic Models:
+```python
+@post("users", form_body=True)
+def create_user_form(self, user: UserCreate) -> UserResponse:
+    # Will send the data as form-data instead of JSON
+    pass
+```
+
+5. Mixed Parameters:
+```python
+@put("users/{user_id}")
+def update_user(self, user_id: int, user: UserUpdate) -> UserResponse:
+    # user_id will be used in the URL path
+    # user will be serialized as the request body
+    pass
+```
+
+You can also provide custom headers for specific requests:
+```python
+@post("users")
+def create_user(self, user: UserCreate, request_headers: dict = None) -> UserResponse:
+    # request_headers will be merged with client's default headers
+    pass
+```
 
 ## Configuration
 
