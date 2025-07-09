@@ -75,8 +75,8 @@ def rest(method: str):
     return decorator
 
 
-get = _create_http_method_decorator('GET')
-post = _create_http_method_decorator('POST')
-put = _create_http_method_decorator('PUT')
-patch = _create_http_method_decorator('PATCH')
-delete = _create_http_method_decorator('DELETE')
+get = rest('GET')
+post = rest('POST')
+put = rest('PUT')
+patch = rest('PATCH')
+delete = rest('DELETE')
