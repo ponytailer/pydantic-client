@@ -16,9 +16,16 @@ class AiohttpWebClient(BaseWebClient):
         *,
         params: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
         response_model: Optional[Type[T]] = None
     ) -> Any:
         url = self._make_url(path)
+
+        # Merge headers from client and request
+        merged_headers = self.headers.copy()
+        if headers:
+            merged_headers.update(headers)
 
         async with aiohttp.ClientSession() as session:
             async with session.request(
@@ -26,14 +33,15 @@ class AiohttpWebClient(BaseWebClient):
                 url=url,
                 params=params,
                 json=json,
-                headers=self.headers,
+                data=data,
+                headers=merged_headers,
                 timeout=aiohttp.ClientTimeout(total=self.timeout)
             ) as response:
                 response.raise_for_status()
                 data = await response.json()
 
                 if response_model is not None:
-                    return response_model.parse_obj(data)
+                    return response_model.model_validate(data)
                 return data
 
 
@@ -45,10 +53,17 @@ class HttpxWebClient(BaseWebClient):
         *,
         params: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
         response_model: Optional[Type[T]] = None
     ) -> Any:
         import httpx
         url = self._make_url(path)
+
+        # Merge headers from client and request
+        merged_headers = self.headers.copy()
+        if headers:
+            merged_headers.update(headers)
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.request(
@@ -56,11 +71,12 @@ class HttpxWebClient(BaseWebClient):
                 url=url,
                 params=params,
                 json=json,
-                headers=self.headers
+                data=data,
+                headers=merged_headers
             )
             response.raise_for_status()
             data = response.json()
 
             if response_model is not None:
-                return response_model.parse_obj(data)
+                return response_model.model_validate(data)
             return data

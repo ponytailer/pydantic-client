@@ -36,6 +36,8 @@ class BaseWebClient(ABC):
         *,
         params: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
         response_model: Optional[Type[T]] = None
     ) -> Any:
         pass
