@@ -1,5 +1,6 @@
 import pytest
 import requests_mock
+import requests
 from pydantic import BaseModel
 from pydantic_client import RequestsWebClient, get, post
 
