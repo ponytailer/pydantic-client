@@ -1,47 +1,50 @@
-[tool.poetry]
-name = "pydantic-client"
-version = "1.0.7"
-description = "Http client base pydantic, with requests or aiohttp"
-authors = ["ponytailer <huangxiaohen2738@gmail.com>"]
-readme = "README.md"
-packages = [{ include = "pydantic_client" }]
-homepage = "https://github.com/ponytailer/pydantic-client"
-
-[[tool.poetry.source]]
-name = "tuna"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-
-
-[tool.poetry.dependencies]
-python = "^3.9"
-
-pydantic = ">=2.1"
-requests = "*"
-
-aiohttp = { version = "*", optional = true }
-httpx = { version = "*", extras = ["http2"], optional = true }
-openapi-spec-validator = "^0.7.1"
-jinja2 = "^3.1.5"
-typer = "^0.15.1"
-
-[tool.poetry.extras]
-httpx = ["httpx"]
-aiohttp = ["aiohttp"]
-all = ["httpx", "aiohttp"]
-
-[tool.poetry.scripts]
-pydantic-client = "pydantic_client.cli:cli_app"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-addopts = "-v --cov=pydantic_client --cov-report=term-missing"
+[project]
+name = "pydantic-client"
+version = "2.0.0"
+description = "A pydantic based rest client generator"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "ponytailer", email = "huangxiaohen2738@gmail.com" }
+]
+keywords = ["pydantic", "client", "rest", "api"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "pydantic>=2.0",
+    "httpx>=0.24.1",
+    "anyio>=3.7.0",
+    "aiohttp>=3.10.11",
+    "requests>=2.32.4",
+]
 
-[tool.coverage.run]
-source = ["pydantic_client"]
-omit = ["tests/*"]
+[project.optional-dependencies]
+test = [
+    "pytest>=7.3.1",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.1",
+    "respx>=0.20.2",
+]
+dev = [
+    "black>=23.7.0",
+    "isort>=5.12.0",
+    "ruff>=0.0.284",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.black]
+line-length = 120
