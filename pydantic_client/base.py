@@ -1,5 +1,7 @@
+import inspect
+
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import Any, Dict, Optional, Type, TypeVar, List
 
 from pydantic import BaseModel
 
@@ -41,3 +43,12 @@ class BaseWebClient(ABC):
         response_model: Optional[Type[T]] = None
     ) -> Any:
         pass
+
+    @classmethod
+    def get_agno_tools(cls) -> List[Dict[str, Any]]:
+        """Get all registered Agno tools from the client"""
+        tools = []
+        for name, method in inspect.getmembers(cls, inspect.isfunction):
+            if hasattr(method, '_agno_tool'):
+                tools.append(method._agno_tool)
+        return tools

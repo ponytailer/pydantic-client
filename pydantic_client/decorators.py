@@ -1,8 +1,10 @@
 import inspect
 from functools import wraps
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 from pydantic import BaseModel
+
+from .tools.agno import register_agno_tool
 
 
 def _process_request_params(
@@ -78,13 +80,20 @@ def _process_request_params(
     }
 
 
-def rest(method: str, form_body: bool = False) -> Callable:
+def rest(
+    method: str, 
+    form_body: bool = False,
+    agno_tool: bool = False,
+    tool_description: Optional[str] = None
+) -> Callable:
     """
     Create a REST decorator for the specified HTTP method.
 
     Args:
         method: HTTP method (GET, POST, PUT, PATCH, DELETE)
         form_body: Whether to send request body as form data instead of JSON
+        agno_tool: Register as Agno tool
+        tool_description: Custom description for the Agno tool
 
     Returns:
         Decorator function that accepts a path template
@@ -113,6 +122,8 @@ def rest(method: str, form_body: bool = False) -> Callable:
                 Function that determines whether to use sync or async
                 based on client type
             """
+            if agno_tool:
+                func = register_agno_tool(tool_description)(func)
 
             @wraps(func)
             async def async_wrapped(self, *args, **kwargs):

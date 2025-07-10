@@ -37,6 +37,11 @@ class UserResponse(BaseModel):
     name: str
     email: str
 
+class CreateUser(BaseModel):
+    name: str
+    email: str
+
+
 # Create your API client
 class MyAPIClient(RequestsWebClient):
     def __init__(self):
@@ -50,12 +55,15 @@ class MyAPIClient(RequestsWebClient):
         pass
 
     @post("users")
-    def create_user(self, name: str, email: str) -> UserResponse:
+    def create_user(self, user: CreateUser) -> UserResponse:
         pass
 
 # Use the client
 client = MyAPIClient()
 user = client.get_user(user_id=123)
+
+user_body = CreateUser(name="john", email="123@gmail.com")
+user = client.create_user(user_body)
 ```
 
 ## Available Clients
@@ -108,6 +116,93 @@ config = {
 }
 client = MyAPIClient.from_config(config)
 ```
+
+## Api to Agno Tools.
+
+```
+from pydantic import BaseModel
+from typing import List
+
+
+class User(BaseModel):
+    id: int
+    name: str
+    email: str
+
+
+class PetAPIClient(BaseClient):
+    @get("/pets/{id}", agno_tool=True)
+    def get_pet(self, id: int) -> dict:
+        """Get pet details by ID
+        
+        :param id: The ID of the pet to retrieve
+        """
+        pass
+    
+    @post("/pets", agno_tool=True, tool_description="Create a new pet")
+    def create_pet(self, name: str, type: str) -> dict:
+        """Create a new pet
+        
+        :param name: Name of the pet
+        :param type: Type of pet (dog, cat, etc.)
+        """
+        pass
+    
+    @get("/users", agno_tool=True)
+    def list_users(self, limit: int = 10) -> List[User]:
+        """List all users
+        
+        :param limit: Maximum number of users to return
+        """
+        pass
+
+
+# Get Agno tools
+tools = PetAPIClient.get_agno_tools()
+"""
+[
+    {
+        "name": "get_pet",
+        "description": "Get pet details by ID",
+        "parameters": {
+            "id": {
+                "type": "integer",
+                "description": "The ID of the pet to retrieve",
+                "required": true
+            }
+        }
+    },
+    {
+        "name": "create_pet",
+        "description": "Create a new pet",
+        "parameters": {
+            "name": {
+                "type": "string",
+                "description": "Name of the pet",
+                "required": true
+            },
+            "type": {
+                "type": "string",
+                "description": "Type of pet (dog, cat, etc.)",
+                "required": true
+            }
+        }
+    },
+    {
+        "name": "list_users",
+        "description": "List all users",
+        "parameters": {
+            "limit": {
+                "type": "integer",
+                "description": "Maximum number of users to return",
+                "required": false
+            }
+        }
+    }
+]
+"""
+
+
 
 ## Type Safety
 
