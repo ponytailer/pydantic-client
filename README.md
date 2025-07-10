@@ -7,8 +7,9 @@
 [![Downloads](https://pepy.tech/badge/pydantic-client)](https://pepy.tech/project/pydantic-client)
 [![License](https://img.shields.io/github/license/ponytailer/pydantic-client.svg)](https://github.com/ponytailer/pydantic-client/blob/main/LICENSE)
 
+A flexible HTTP client library that leverages Pydantic models for request/response handling,
+supporting both synchronous and asynchronous operations.
 
-A flexible HTTP client library that leverages Pydantic models for request/response handling, supporting both synchronous and asynchronous operations.
 #### ⭐ If you like this project, please star it on GitHub!
 
 ## Features
@@ -22,12 +23,10 @@ A flexible HTTP client library that leverages Pydantic models for request/respon
 - 🔧 **Flexible configuration**: Easy client configuration with headers, timeouts, and more
 - 🔧 **convert api to llm tools**: API2Tools, support `agno`, others coming soon...
 
-
-
 ## TODO
+
 - [ ] support langchain tools
 - [ ] support crewai tools
-
 
 ## Installation
 
@@ -41,11 +40,13 @@ pip install pydantic-client
 from pydantic import BaseModel
 from pydantic_client import RequestsWebClient, get, post
 
+
 # Define your response models
 class UserResponse(BaseModel):
     id: int
     name: str
     email: str
+
 
 class CreateUser(BaseModel):
     name: str
@@ -59,7 +60,7 @@ class MyAPIClient(RequestsWebClient):
             base_url="https://api.example.com",
             headers={"Authorization": "Bearer token"}
         )
-    
+
     @get("users/{user_id}")
     def get_user(self, user_id: int) -> UserResponse:
         pass
@@ -72,13 +73,13 @@ class MyAPIClient(RequestsWebClient):
     def delete_user(self, user_id: str):
         ...
 
+
 # Use the client
 client = MyAPIClient()
 user = client.get_user(user_id=123)
 
 user_body = CreateUser(name="john", email="123@gmail.com")
 user = client.create_user(user_body)
-
 
 from agno.agent import Agent
 
@@ -138,11 +139,12 @@ config = {
 client = MyAPIClient.from_config(config)
 ```
 
-
 ## Type Safety
 
-The library automatically validates responses against Pydantic models when specified as return types in the method definitions.
+The library automatically validates responses against Pydantic models when specified as return types
+in the method definitions.
 
 ## Error Handling
 
-HTTP errors are raised as exceptions by the underlying HTTP client libraries. Make sure to handle these appropriately in your application.
+HTTP errors are raised as exceptions by the underlying HTTP client libraries. Make sure to handle
+these appropriately in your application.
