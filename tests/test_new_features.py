@@ -1,8 +1,7 @@
-import pytest
 import requests_mock
 from typing import Optional
 from pydantic import BaseModel
-from pydantic_client import get, post, put, patch, RequestsWebClient
+from pydantic_client import post, put, patch, RequestsWebClient
 
 
 class User(BaseModel):

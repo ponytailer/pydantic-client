@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
-from pydantic_client import RequestsWebClient, AiohttpWebClient, HttpxWebClient, get, post
+from pydantic_client import RequestsWebClient, AiohttpWebClient, HttpxWebClient, get
 
 class User(BaseModel):
     id: str

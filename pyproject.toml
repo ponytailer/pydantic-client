@@ -1,6 +1,6 @@
 [project]
 name = "pydantic-client"
-version = "1.0.7"
+version = "2.0"
 description = "Http client base pydantic, with requests or aiohttp"
 authors = [
     {name = "ponytailer", email = "huangxiaohen2738@gmail.com"}
@@ -10,19 +10,13 @@ requires-python = ">=3.9"
 homepage = "https://github.com/ponytailer/pydantic-client"
 dependencies = [
     "pydantic>=2.1",
-    "requests",
-    "openapi-spec-validator>=0.7.1",
-    "jinja2>=3.1.5",
-    "typer>=0.15.1",
+    "requests"
 ]
 
 [project.optional-dependencies]
 httpx = ["httpx[http2]"]
 aiohttp = ["aiohttp"]
 all = ["httpx[http2]", "aiohttp"]
-
-[project.scripts]
-pydantic-client = "pydantic_client.cli:cli_app"
 
 [build-system]
 requires = ["hatchling"]

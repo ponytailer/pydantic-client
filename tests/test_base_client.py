@@ -1,6 +1,5 @@
 from typing import Any, Dict, Optional, Type
 
-import pytest
 from pydantic_client.base import BaseWebClient
 
 
