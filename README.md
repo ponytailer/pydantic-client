@@ -8,6 +8,7 @@
 
 
 A flexible HTTP client library that leverages Pydantic models for request/response handling, supporting both synchronous and asynchronous operations.
+#### ⭐ If you like this project, please star it on GitHub!
 
 ## Features
 
@@ -201,7 +202,7 @@ tools = PetAPIClient.get_agno_tools()
     }
 ]
 """
-
+```
 
 
 ## Type Safety
@@ -211,7 +212,3 @@ The library automatically validates responses against Pydantic models when speci
 ## Error Handling
 
 HTTP errors are raised as exceptions by the underlying HTTP client libraries. Make sure to handle these appropriately in your application.
-
----
-
-⭐ If you like this project, please star it on GitHub!

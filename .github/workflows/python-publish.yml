@@ -28,7 +28,7 @@ jobs:
       with:
         version: "latest"
     - name: Set up Python
-      run: uv python install 3.x
+      run: uv python install 3.12
     - name: Build package
       run: uv build
     - name: Publish package
