@@ -1,16 +1,16 @@
-from pydantic_client.decorators import delete, get, patch, post, put
-from pydantic_client.main import PydanticClientManager
-from pydantic_client.schema.client_config import ClientConfig, ClientType
-
-pydantic_client_manager = PydanticClientManager()
+from .decorators import delete, get, patch, post, put
+from .sync_client import RequestsWebClient
+from .async_client import AiohttpWebClient, HttpxWebClient
+from .base import BaseWebClient
 
 __all__ = [
-    "pydantic_client_manager",
-    "ClientConfig",
-    "ClientType",
-    "patch",
+    "BaseWebClient",
+    "RequestsWebClient",
+    "AiohttpWebClient",
+    "HttpxWebClient",
     "get",
     "post",
     "put",
+    "patch",
     "delete",
 ]

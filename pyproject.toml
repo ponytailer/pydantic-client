@@ -1,37 +1,33 @@
-[tool.poetry]
+[project]
 name = "pydantic-client"
-version = "1.0.7"
+version = "2.0"
 description = "Http client base pydantic, with requests or aiohttp"
-authors = ["ponytailer <huangxiaohen2738@gmail.com>"]
+authors = [
+    {name = "ponytailer", email = "huangxiaohen2738@gmail.com"}
+]
 readme = "README.md"
-packages = [{ include = "pydantic_client" }]
+requires-python = ">=3.9"
 homepage = "https://github.com/ponytailer/pydantic-client"
+dependencies = [
+    "pydantic>=2.1",
+    "requests"
+]
 
-[[tool.poetry.source]]
-name = "tuna"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-
-
-[tool.poetry.dependencies]
-python = "^3.9"
-
-pydantic = ">=2.1"
-requests = "*"
-
-aiohttp = { version = "*", optional = true }
-httpx = { version = "*", extras = ["http2"], optional = true }
-openapi-spec-validator = "^0.7.1"
-jinja2 = "^3.1.5"
-typer = "^0.15.1"
-
-[tool.poetry.extras]
-httpx = ["httpx"]
+[project.optional-dependencies]
+httpx = ["httpx[http2]"]
 aiohttp = ["aiohttp"]
-all = ["httpx", "aiohttp"]
-
-[tool.poetry.scripts]
-pydantic-client = "pydantic_client.cli:cli_app"
+all = ["httpx[http2]", "aiohttp"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --cov=pydantic_client --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["pydantic_client"]
+omit = ["tests/*"]
