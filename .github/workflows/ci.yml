@@ -25,6 +25,8 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
       - name: Install Dependencies
         run: uv sync --all-extras
+      - name: Install Dependencies
+        run: uv run pip install -r requirements.txt
       - name: Test
         run: uv run pytest tests/ --cov=pydantic_client --cov-report=term-missing:skip-covered --cov-report=xml
       - name: Upload coverage
