@@ -42,7 +42,24 @@ class BaseWebClient(ABC):
         headers: Optional[Dict[str, str]] = None,
         response_model: Optional[Type[T]] = None
     ) -> Any:
-        pass
+        ...
+    
+
+    def register_agno_tools(self, agent):
+        """
+        Register all agno tools of this client instance to the given agent.
+        Each tool will be registered with its description, parameters, and a call bound to this instance.
+
+        :param agent: The agent instance which supports .register_tool(name, description, parameters, call)
+        """
+        for tool_info in self.get_agno_tools():
+            tool_name = tool_info['name']
+            agent.register_tool(
+                name=tool_name,
+                description=tool_info.get('description', ''),
+                parameters=tool_info.get('parameters', {}),
+                call=lambda params, tool_name=tool_name: getattr(self, tool_name)(**params)
+            )
 
     @classmethod
     def get_agno_tools(cls) -> List[Dict[str, Any]]:
