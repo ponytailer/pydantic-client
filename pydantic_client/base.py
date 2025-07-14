@@ -4,7 +4,7 @@ import time
 import statsd
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Type, TypeVar, List
+from typing import Any, Dict, Optional, TypeVar, List
 
 from pydantic import BaseModel
 from .schema import RequestInfo

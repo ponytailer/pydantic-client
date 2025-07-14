@@ -73,10 +73,8 @@ class MyAPIClient(RequestsWebClient):
         pass
 
     @delete("/users", agno_tool=True, tool_description="this is the function to delete user")
-    def delete_user(self, user_id: str):
+    def delete_user(self, user_id: str, request_headers: Dict[str, Any]):
         ...
-
-session = requests.Session()
 
 
 # Use the client
@@ -85,6 +83,10 @@ user = client.get_user(user_id=123)
 
 user_body = CreateUser(name="john", email="123@gmail.com")
 user = client.create_user(user_body)
+
+# will update the client headers.
+client.delete_user("123", {"ba": "your"})
+
 
 from agno.agent import Agent
 
@@ -170,6 +172,7 @@ You can initialize clients with custom configurations:
 client = MyAPIClient(
     base_url="https://api.example.com",
     headers={"Custom-Header": "value"},
+    session=requests.Session(),  # your own session
     timeout=30  # in seconds
 )
 

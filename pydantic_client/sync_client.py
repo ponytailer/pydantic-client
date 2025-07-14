@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import Any, Dict, Optional, TypeVar
 
 import requests
 from pydantic import BaseModel
@@ -29,7 +29,8 @@ class RequestsWebClient(BaseWebClient):
 
         response = requests.request(**request_params, timeout=self.timeout)
         response.raise_for_status()
+
         data = response.json()
         if response_model is not None:
-            return response_model.model_validate(data)
+            return response_model.model_validate(data, from_attributes=True)
         return data

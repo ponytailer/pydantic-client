@@ -1,6 +1,6 @@
 import inspect
 from functools import wraps
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Optional
 
 from pydantic import BaseModel
 
@@ -35,6 +35,7 @@ def _process_request_params(
 
     # Get return type for response model
     return_type = sig.return_annotation
+
     response_model = (
         return_type
         if isinstance(return_type, type) and issubclass(return_type, BaseModel)
