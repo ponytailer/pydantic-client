@@ -2,13 +2,12 @@ from typing import Any, Dict, Optional, Type, TypeVar
 
 from pydantic import BaseModel
 
-from .base import BaseWebClient
+from .base import BaseWebClient, RequestInfo
 
 try:
     import aiohttp
 except ImportError:
     raise ImportError("please install aiohttp: `pip install aiohttp`")
-
 
 
 T = TypeVar('T', bound=BaseModel)
@@ -25,32 +24,15 @@ class AiohttpWebClient(BaseWebClient):
     ):
         super().__init__(base_url, headers, timeout, session, statsd_address)
 
-    async def _request(
-        self,
-        method: str,
-        path: str,
-        *,
-        params: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
-        response_model: Optional[Type[T]] = None
-    ) -> Any:
-        url = self._make_url(path)
-        
-        # Merge headers
-        request_headers = self.headers.copy()
-        if headers:
-            request_headers.update(headers)
+    async def _request(self, request_info: RequestInfo) -> Any:
+        request_params = self.dump_request_params(request_info)
+        response_model = request_params.pop("response_model")
+
+        request_params = self.before_request(request_params)
 
         async with aiohttp.ClientSession() as session:
             async with session.request(
-                method=method,
-                url=url,
-                params=params,
-                json=json,
-                data=data,
-                headers=request_headers,
+                **request_params,
                 timeout=aiohttp.ClientTimeout(total=self.timeout)
             ) as response:
                 response.raise_for_status()
@@ -77,37 +59,17 @@ class HttpxWebClient(BaseWebClient):
         except ImportError:
             raise ImportError("please install httpx: `pip install httpx`")
 
-    async def _request(
-        self,
-        method: str,
-        path: str,
-        *,
-        params: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
-        response_model: Optional[Type[T]] = None
-    ) -> Any:
+    async def _request(self, request_info: RequestInfo) -> Any:
         import httpx
-        url = self._make_url(path)
-        
-        # Merge headers
-        request_headers = self.headers.copy()
-        if headers:
-            request_headers.update(headers)
+        request_params = self.dump_request_params(request_info)
+        response_model = request_params.pop("response_model")
+
+        request_params = self.before_request(request_params)
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.request(
-                method=method,
-                url=url,
-                params=params,
-                json=json,
-                data=data,
-                headers=request_headers
-            )
+            response = await client.request(**request_params)
             response.raise_for_status()
             data = response.json()
-
             if response_model is not None:
                 return response_model.model_validate(data)
             return data

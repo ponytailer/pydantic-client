@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Type, TypeVar, List
 
 from pydantic import BaseModel
+from .schema import RequestInfo
 
 
 T = TypeVar('T', bound=BaseModel)
@@ -59,25 +60,32 @@ class BaseWebClient(ABC):
             timeout=config.get('timeout', 30),
             session=config.get('session', None)
         )
+    
+    def before_request(self, request_params: Dict[str, Any]) -> Dict[str, Any]:
+        """before request, you can do something by yourself
+        such as: cal signature, etc."""
+        return request_params
 
     def _make_url(self, path: str) -> str:
         return f"{self.base_url}/{path.lstrip('/')}"
 
     def span(self, prefix: Optional[str] = None):
         return SpanContext(self, prefix)
+    
+    def dump_request_params(self, request_info: RequestInfo) -> Dict[str, Any]:
+        request_params = request_info.model_dump()
+        url = self._make_url(request_params.pop("path"))
+        # Merge headers
+        request_headers = self.headers.copy()
+        if request_info.headers:
+            request_headers.update(request_info.headers)
+        
+        request_params["headers"] = request_headers
+        request_params["url"] = url
+        return request_params
 
     @abstractmethod
-    def _request(
-        self,
-        method: str,
-        path: str,
-        *,
-        params: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
-        response_model: Optional[Type[T]] = None
-    ) -> Any:
+    def _request(self, request_info: RequestInfo) -> Any:
         ...
     
 

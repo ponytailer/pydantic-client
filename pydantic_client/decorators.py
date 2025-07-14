@@ -5,11 +5,12 @@ from typing import Any, Callable, Dict, Optional
 from pydantic import BaseModel
 
 from .tools.agno import register_agno_tool
+from .schema import RequestInfo
 
 
 def _process_request_params(
     func: Callable, method: str, path: str, form_body: bool, *args, **kwargs
-) -> Dict[str, Any]:
+) -> RequestInfo:
     """
     Extract and process request parameters from function arguments.
 
@@ -21,7 +22,7 @@ def _process_request_params(
         *args, **kwargs: Function arguments
 
     Returns:
-        Dictionary containing processed request parameters
+        RequestInfo containing processed request parameters
     """
     sig = inspect.signature(func)
     bound_args = sig.bind(*args, **kwargs)
@@ -61,7 +62,7 @@ def _process_request_params(
             if method in ["GET", "DELETE"]:
                 query_params[param_name] = param_value
 
-    return {
+    info = {
         "method": method,
         "path": formatted_path,
         "params": query_params if method in ["GET", "DELETE"] else None,
@@ -78,6 +79,7 @@ def _process_request_params(
         "headers": request_headers,
         "response_model": response_model,
     }
+    return RequestInfo.model_validate(info)
 
 
 def rest(
@@ -131,7 +133,7 @@ def rest(
                 request_params = _process_request_params(
                     func, method, path, form_body, self, *args, **kwargs
                 )
-                return await self._request(**request_params)
+                return await self._request(request_params)
 
             @wraps(func)
             def sync_wrapped(self, *args, **kwargs):
@@ -139,7 +141,7 @@ def rest(
                 request_params = _process_request_params(
                     func, method, path, form_body, self, *args, **kwargs
                 )
-                return self._request(**request_params)
+                return self._request(request_params)
 
             @wraps(func)
             def choose_wrapper(self, *args, **kwargs):

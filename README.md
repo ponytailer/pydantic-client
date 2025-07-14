@@ -124,6 +124,27 @@ def get_user_post(self, user_id: int, post_id: int) -> PostResponse:
 - For GET and DELETE methods, remaining arguments are sent as query parameters
 - For POST, PUT, and PATCH methods, remaining arguments are sent in the request body as JSON
 
+```python
+
+# you can cal signature by your self, overwrite the function `before_request`
+from pydantic_client.schema import RequestInfo
+
+
+class MyAPIClient(RequestsWebClient):
+    # some code
+
+    def before_request(self, request_params: Dict[str, Any]) -> Dict[str, Any]:
+        # the request params before send: body, header, etc...
+        sign = cal_signature(request_params)
+        request_params["headers].update(dict(signature=sign))
+        return request_params
+
+
+# will send your new request_params
+user = client.get_user("123")
+
+```
+
 
 ### Timing Context Manager
 
