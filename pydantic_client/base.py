@@ -1,12 +1,13 @@
 import inspect
 import logging
 import time
+import statsd
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Type, TypeVar, List
 
 from pydantic import BaseModel
-from statsd import StatsClient
+
 
 T = TypeVar('T', bound=BaseModel)
 logger = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ class BaseWebClient(ABC):
 
         if statsd_address:
             host, port = statsd_address.split(':')
-            self._statsd_client = StatsClient(host, int(port))
+            self._statsd_client = statsd.StatsClient(host, int(port))
 
 
     @classmethod
