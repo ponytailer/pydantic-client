@@ -20,15 +20,15 @@ class SpanContext:
         self.start_time = None
 
     def __enter__(self):
-        self.start_time = int(time.time() * 1000)
+        self.start_time = time.perf_counter()
         logger.info(f"[{self.prefix}] span start")
         return self.client
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        elapsed = int(time.time() * 1000) - self.start_time
-        logger.info(f"[{self.prefix}] span end, elapsed: {elapsed:.3f}ms")
+        elapsed = 1000 * (time.perf_counter() - self.start_time)
+        logger.info(f"[{self.prefix}] span end, elapsed: {elapsed}ms")
         if self.client._statsd_client:
-            self.client._statsd_client.timing(f"{self.prefix}.elapsed", elapsed)
+            self.client._statsd_client.timing(f"{self.prefix}.elapsed", int(elapsed))
 
 
 class BaseWebClient(ABC):
