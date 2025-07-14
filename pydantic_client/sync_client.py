@@ -9,6 +9,17 @@ T = TypeVar('T', bound=BaseModel)
 
 
 class RequestsWebClient(BaseWebClient):
+    def __init__(
+        self,
+        base_url: str,
+        headers: Optional[Dict[str, Any]] = None,
+        timeout: Optional[int] =30,
+        session: Optional[requests.Session] = None
+    ):
+        super().__init__(base_url, headers, timeout)
+        if not self.session:
+            self.session = requests.Session()
+
     def _request(
         self,
         method: str,

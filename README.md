@@ -20,6 +20,7 @@ supporting both synchronous and asynchronous operations.
 - 🎯 **Decorator-based API**: Clean, intuitive API definition with decorators
 - 📝 **OpenAPI/Swagger support**: Generate client code from OpenAPI specifications
 - 🛡️ **Automatic validation**: Request/response validation with Pydantic models
+- ⚡ **Timing context manager**: Use `with client.span(prefix="myapi"):` to log timing for any API call, sync or async
 - 🔧 **Flexible configuration**: Easy client configuration with headers, timeouts, and more
 - 🔧 **convert api to llm tools**: API2Tools, support `agno`, others coming soon...
 
@@ -73,9 +74,11 @@ class MyAPIClient(RequestsWebClient):
     def delete_user(self, user_id: str):
         ...
 
+session = requests.Session()
+
 
 # Use the client
-client = MyAPIClient()
+client = MyAPIClient(base_url="https://localhost")
 user = client.get_user(user_id=123)
 
 user_body = CreateUser(name="john", email="123@gmail.com")
@@ -118,6 +121,17 @@ def get_user_post(self, user_id: int, post_id: int) -> PostResponse:
 
 - For GET and DELETE methods, remaining arguments are sent as query parameters
 - For POST, PUT, and PATCH methods, remaining arguments are sent in the request body as JSON
+
+
+### Timing Context Manager
+
+All clients support a span context manager for simple API call timing and logging:
+
+```python
+with client.span(prefix="fetch_user"):
+    user = client.get_user_by_id("123")
+# Logs the elapsed time for the API call, useful for performance monitoring.
+```
 
 ## Configuration
 

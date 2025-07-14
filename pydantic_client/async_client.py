@@ -1,14 +1,29 @@
 from typing import Any, Dict, Optional, Type, TypeVar
 
-import aiohttp
 from pydantic import BaseModel
 
 from .base import BaseWebClient
+
+try:
+    import aiohttp
+except ImportError:
+    raise ImportError("please install aiohttp: `pip install aiohttp`")
+
+
 
 T = TypeVar('T', bound=BaseModel)
 
 
 class AiohttpWebClient(BaseWebClient):
+    def __init__(
+        self,
+        base_url: str,
+        headers: Optional[Dict[str, Any]] = None,
+        timeout: Optional[int] =30,
+        session: Optional[aiohttp.ClientSession] = None
+    ):
+        super().__init__(base_url, headers, timeout)
+
     async def _request(
         self,
         method: str,
@@ -46,6 +61,15 @@ class AiohttpWebClient(BaseWebClient):
 
 
 class HttpxWebClient(BaseWebClient):
+
+    def __init__(self, base_url, headers = None, timeout = 30):
+        super().__init__(base_url, headers, timeout)
+
+        try:
+            import httpx
+        except ImportError:
+            raise ImportError("please install httpx: `pip install httpx`")
+
     async def _request(
         self,
         method: str,

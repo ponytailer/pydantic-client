@@ -1,4 +1,6 @@
 import inspect
+import logging
+import time
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Type, TypeVar, List
@@ -6,6 +8,23 @@ from typing import Any, Dict, Optional, Type, TypeVar, List
 from pydantic import BaseModel
 
 T = TypeVar('T', bound=BaseModel)
+logger = logging.getLogger(__name__)
+
+
+class SpanContext:
+    def __init__(self, client, prefix: Optional[str] = None):
+        self.client = client
+        self.prefix = prefix or "api"
+        self.start_time = None
+
+    def __enter__(self):
+        self.start_time = int(time.time() * 1000)
+        logger.info(f"[{self.prefix}] span start")
+        return self.client
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        elapsed = int(time.time() * 1000) - self.start_time
+        logger.info(f"[{self.prefix}] span end, elapsed: {elapsed:.3f}ms")
 
 
 class BaseWebClient(ABC):
@@ -29,6 +48,9 @@ class BaseWebClient(ABC):
 
     def _make_url(self, path: str) -> str:
         return f"{self.base_url}/{path.lstrip('/')}"
+
+    def span(self, prefix: Optional[str] = None):
+        return SpanContext(self, prefix)
 
     @abstractmethod
     def _request(
