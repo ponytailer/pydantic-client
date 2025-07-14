@@ -14,9 +14,10 @@ class RequestsWebClient(BaseWebClient):
         base_url: str,
         headers: Optional[Dict[str, Any]] = None,
         timeout: Optional[int] =30,
-        session: Optional[requests.Session] = None
+        session: Optional[requests.Session] = None,
+        statsd_address: Optional[str] = None
     ):
-        super().__init__(base_url, headers, timeout)
+        super().__init__(base_url, headers, timeout, session, statsd_address)
         if not self.session:
             self.session = requests.Session()
 

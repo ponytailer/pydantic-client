@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Type, TypeVar, List
 
 from pydantic import BaseModel
+from statsd import StatsClient
 
 T = TypeVar('T', bound=BaseModel)
 logger = logging.getLogger(__name__)
@@ -25,6 +26,8 @@ class SpanContext:
     def __exit__(self, exc_type, exc_val, exc_tb):
         elapsed = int(time.time() * 1000) - self.start_time
         logger.info(f"[{self.prefix}] span end, elapsed: {elapsed:.3f}ms")
+        if self.client._statsd_client:
+            self.client._statsd_client.timing(f"{self.prefix}.elapsed", elapsed)
 
 
 class BaseWebClient(ABC):
@@ -32,19 +35,28 @@ class BaseWebClient(ABC):
         self,
         base_url: str,
         headers: Optional[Dict[str, str]] = None,
-        timeout: int = 30
+        timeout: int = 30,
+        session: Any = None,
+        statsd_address: str = None
     ):
         self.base_url = base_url.rstrip('/')
         self.headers = headers or {}
         self.timeout = timeout
-        self.session = None
+        self.session = session
+        self._statsd_client = None
+
+        if statsd_address:
+            host, port = statsd_address.split(':')
+            self._statsd_client = StatsClient(host, int(port))
+
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> 'BaseWebClient':
         return cls(
             base_url=config['base_url'],
             headers=config.get('headers'),
-            timeout=config.get('timeout', 30)
+            timeout=config.get('timeout', 30),
+            session=config.get('session', None)
         )
 
     def _make_url(self, path: str) -> str:

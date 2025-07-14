@@ -20,9 +20,10 @@ class AiohttpWebClient(BaseWebClient):
         base_url: str,
         headers: Optional[Dict[str, Any]] = None,
         timeout: Optional[int] =30,
-        session: Optional[aiohttp.ClientSession] = None
+        session: Optional[aiohttp.ClientSession] = None,
+        statsd_address: Optional[str] = None
     ):
-        super().__init__(base_url, headers, timeout)
+        super().__init__(base_url, headers, timeout, session, statsd_address)
 
     async def _request(
         self,
@@ -62,9 +63,15 @@ class AiohttpWebClient(BaseWebClient):
 
 class HttpxWebClient(BaseWebClient):
 
-    def __init__(self, base_url, headers = None, timeout = 30):
-        super().__init__(base_url, headers, timeout)
-
+    def __init__(
+        self,
+        base_url: str,
+        headers: Optional[Dict[str, Any]] = None,
+        timeout: Optional[int] =30,
+        session = None,
+        statsd_address: Optional[str] = None
+    ):
+        super().__init__(base_url, headers, timeout, session, statsd_address)
         try:
             import httpx
         except ImportError:

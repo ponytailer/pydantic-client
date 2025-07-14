@@ -132,6 +132,12 @@ All clients support a span context manager for simple API call timing and loggin
 with client.span(prefix="fetch_user"):
     user = client.get_user_by_id("123")
 # Logs the elapsed time for the API call, useful for performance monitoring.
+
+# will send `fetch_user.elapsed` to statsd
+client = MyAPIClient(base_url="https://localhost", statsd_address="localhost:8125")
+with client.span(prefix="fetch_user"):
+    user = client.get_user_by_id("123")
+
 ```
 
 ## Configuration
