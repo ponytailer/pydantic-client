@@ -37,6 +37,7 @@ class BaseWebClient(ABC):
         self.base_url = base_url.rstrip('/')
         self.headers = headers or {}
         self.timeout = timeout
+        self.session = None
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> 'BaseWebClient':
