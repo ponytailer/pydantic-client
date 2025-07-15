@@ -7,8 +7,8 @@ class DummyAgent:
     def __init__(self):
         self.tools = []
 
-    def register_tool(self, name, description, parameters, call):
-        self.tools.append((name, description, parameters, call))
+    def set_tools(self, tools):
+        self.tools = tools
 
 
 class TestClient(BaseWebClient):
@@ -59,6 +59,6 @@ def test_register_agno_tools_and_get_agno_tools():
     client = TestClient(base_url="http://a")
     agent = DummyAgent()
     client.register_agno_tools(agent)
-    assert any(t[0] == 'tool_method' for t in agent.tools)
+    assert any(t["name"] == 'tool_method' for t in agent.tools)
     tools = TestClient.get_agno_tools()
     assert any(t['name'] == 'tool_method' for t in tools)
