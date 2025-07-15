@@ -28,8 +28,13 @@ async def user_by_id(request):
         "email": f"user{user_id}@example.com"
     })
 
+
 async def list_users(request):
-    return web.json_response({})
+    return web.json_response({"users": []})
+
+
+async def get_user_string(request):
+    return web.Response(text="abc")
 
 
 @pytest.fixture
@@ -48,6 +53,9 @@ async def mock_server(aiohttp_client) -> AsyncGenerator[
     app.router.add_post('/echo', echo_json)
     app.router.add_get('/users/{user_id}', user_by_id)
     app.router.add_get('/users', list_users)
+    app.router.add_post('/users/string', get_user_string)
+    app.router.add_post('/users/bytes', get_user_string)
+    app.router.add_post('/users/dict', list_users)
 
     client = await aiohttp_client(app)
     yield client

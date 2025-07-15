@@ -72,6 +72,16 @@ class MyAPIClient(RequestsWebClient):
     def create_user(self, user: CreateUser) -> UserResponse:
         pass
 
+    @get("/users/string)
+    def get_user_string(self, user_id: str) -> dict:
+        # will get raw json data
+        ...
+    
+    @get("/users/bytes")
+    def get_user_bytes(self, user_id: str) -> bytes:
+        # will get raw content, bytes type.
+        ...
+
     @delete("/users", agno_tool=True, tool_description="this is the function to delete user")
     def delete_user(self, user_id: str, request_headers: Dict[str, Any]):
         ...

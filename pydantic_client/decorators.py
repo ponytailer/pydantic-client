@@ -36,11 +36,12 @@ def _process_request_params(
     # Get return type for response model
     return_type = sig.return_annotation
 
-    response_model = (
-        return_type
-        if isinstance(return_type, type) and issubclass(return_type, BaseModel)
-        else None
-    )
+    if isinstance(return_type, type) and issubclass(return_type, BaseModel):
+        response_model = return_type
+    elif return_type in [str, bytes]:
+        response_model = return_type
+    else:
+        response_model = None
 
     # Format path with parameters
     formatted_path = path.format(**params)

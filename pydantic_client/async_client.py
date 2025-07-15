@@ -36,11 +36,14 @@ class AiohttpWebClient(BaseWebClient):
                 timeout=aiohttp.ClientTimeout(total=self.timeout)
             ) as response:
                 response.raise_for_status()
-                data = await response.json()
 
-                if response_model is not None:
-                    return response_model.model_validate(data, from_attributes=True)
-                return data
+                if response_model is str:
+                    return await response.text()
+                elif response_model is bytes:
+                    return await response.content.read()
+                elif not response_model:
+                    return await response.json()
+                return response_model.model_validate(await response.json(), from_attributes=True)
 
 
 class HttpxWebClient(BaseWebClient):
@@ -69,7 +72,11 @@ class HttpxWebClient(BaseWebClient):
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.request(**request_params)
             response.raise_for_status()
-            data = response.json()
-            if response_model is not None:
-                return response_model.model_validate(data, from_attributes=True)
-            return data
+
+            if response_model is str:
+                return response.text
+            elif response_model is bytes:
+                return response.content
+            elif not response_model:
+                return response.json()
+            return response_model.model_validate(response.json(), from_attributes=True)

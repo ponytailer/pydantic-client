@@ -29,8 +29,11 @@ class RequestsWebClient(BaseWebClient):
 
         response = requests.request(**request_params, timeout=self.timeout)
         response.raise_for_status()
-
-        data = response.json()
-        if response_model is not None:
-            return response_model.model_validate(data, from_attributes=True)
-        return data
+        
+        if response_model is str:
+            return response.text
+        elif response_model is bytes:
+            return response.content
+        elif not response_model:
+            return response.json()
+        return response_model.model_validate(response.json(), from_attributes=True)
