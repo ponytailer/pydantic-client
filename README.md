@@ -37,6 +37,18 @@ supporting both synchronous and asynchronous operations.
 pip install https://github.com/ponytailer/pydantic-client.git
 ```
 
+
+## Examples
+
+See the [`example/`](./example/) directory for real-world usage of this library, including:
+
+- `example_requests.py`: Synchronous usage with RequestsWebClient
+- `example_httpx.py`: Async usage with HttpxWebClient
+- `example_aiohttp.py`: Async usage with AiohttpWebClient
+- `example_tools.py`: How to register and use Agno tools
+
+Each file is fully commented in English and can be run directly for reference.
+
 ## Quick Start
 
 ```python

@@ -1,3 +1,6 @@
+import inspect
+from typing import List, Dict
+
 from pydantic import BaseModel
 from pydantic_client.tools import agno
 
@@ -82,3 +85,28 @@ def test_register_agno_tool_decorator_call():
     result = bar(3)
     assert called['ok'] == 3
     assert result == 4
+
+
+def test_get_parameter_type_list_and_dict():
+    def func(a: List[str], b: Dict[str, int]):
+        pass
+    sig = inspect.signature(func)
+    assert agno._get_parameter_type(sig.parameters['a']) == 'array'
+    assert agno._get_parameter_type(sig.parameters['b']) == 'object'
+
+
+def test_get_parameter_type_non_type_annotation():
+    param = inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=None)
+    assert agno._get_parameter_type(param) == 'string'
+
+
+def test_create_agno_tool_skips_self():
+    class Foo:
+        def method(self, x: int):
+            """Test method
+            :param x: some int
+            """
+            pass
+    tool_def = agno.create_agno_tool(Foo.method)
+    assert 'self' not in tool_def['parameters']
+    assert 'x' in tool_def['parameters']
