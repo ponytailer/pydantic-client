@@ -82,7 +82,11 @@ class MyAPIClient(RequestsWebClient):
         # will get raw content, bytes type.
         ...
 
-    @delete("/users", agno_tool=True, tool_description="this is the function to delete user")
+    @delete(
+        "/users",
+        agno_tool=True,
+        tool_description="description or use function annotation."
+    )
     def delete_user(self, user_id: str, request_headers: Dict[str, Any]):
         ...
 
