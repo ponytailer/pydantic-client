@@ -1,5 +1,6 @@
 import argparse
 import yaml
+import json
 import re
 
 
@@ -35,7 +36,7 @@ def gen_pydantic_model(name, schema, models):
 
 
 def collect_models(components):
-    """收集所有 schema 并生成 Pydantic model"""
+    """collect all schema and generate the Pydantic model"""
     models = {}
     for name, schema in components.items():
         models[name] = gen_pydantic_model(name, schema, models)
@@ -53,7 +54,7 @@ def method_decorator(method):
 
 
 def get_req_model(operation):
-    # 只支持 application/json，且仅取第一个
+    # only support application/json
     req_body = operation.get("requestBody", {})
     content = req_body.get("content", {})
     for ct, obj in content.items():
@@ -64,7 +65,7 @@ def get_req_model(operation):
 
 
 def get_resp_model(operation):
-    # 只分析 2xx 且 application/json 响应
+    # only 2xx and application/json
     for code, resp in operation.get("responses", {}).items():
         if not code.startswith("2"):
             continue
@@ -119,7 +120,10 @@ def main():
     args = parser.parse_args()
 
     with open(args.file, "r", encoding="utf-8") as f:
-        raw = yaml.safe_load(f)
+        if args.file.endswith(".json"):
+            raw = json.load(f)
+        else:
+            raw = yaml.safe_load(f)
 
     # 1. 解析 models
     if "components" in raw and "schemas" in raw["components"]:
