@@ -1,8 +1,6 @@
 import argparse
 import yaml
 import re
-from pathlib import Path
-from typing import Any, Dict, List
 
 
 def openapi_type_to_py(schema, models):
@@ -68,7 +66,8 @@ def get_req_model(operation):
 def get_resp_model(operation):
     # 只分析 2xx 且 application/json 响应
     for code, resp in operation.get("responses", {}).items():
-        if not code.startswith("2"): continue
+        if not code.startswith("2"):
+            continue
         content = resp.get("content", {})
         for ct, obj in content.items():
             schema = obj.get("schema")

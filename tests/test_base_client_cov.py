@@ -1,7 +1,5 @@
-import pytest
 from pydantic_client.base import BaseWebClient, SpanContext
 from pydantic_client.schema import RequestInfo
-from pydantic import BaseModel
 from pydantic_client.tools.agno import register_agno_tool
 
 
@@ -32,8 +30,8 @@ def test_span_context_logs(monkeypatch):
         _statsd_client = None
     with SpanContext(DummyClient(), prefix="foo") as c:
         assert isinstance(c, DummyClient)
-    assert any("span start" in l for l in logs)
-    assert any("span end" in l for l in logs)
+    assert any("span start" in letter for letter in logs)
+    assert any("span end" in letter for letter in logs)
 
 
 def test_before_request():

@@ -71,7 +71,7 @@ class BaseWebClient(ABC):
         return f"{self.base_url}/{path.lstrip('/')}"
 
     def span(self, prefix: Optional[str] = None):
-        return SpanContext(self, prefix)  
+        return SpanContext(self, prefix)
     
     def dump_request_params(self, request_info: RequestInfo) -> Dict[str, Any]:
         request_params = request_info.model_dump()

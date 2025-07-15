@@ -1,7 +1,6 @@
 """
 Example: Synchronous API client with RequestsWebClient and Agno tools
 """
-from typing import Dict, Any
 from pydantic import BaseModel
 from pydantic_client import RequestsWebClient, get, post
 
