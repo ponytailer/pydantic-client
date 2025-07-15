@@ -32,3 +32,6 @@ addopts = "-v --cov=pydantic_client --cov-report=term-missing"
 [tool.coverage.run]
 source = ["pydantic_client"]
 omit = ["tests/*"]
+
+[project.scripts]
+swagger-cli = "pydantic_client.swagger_cli:main"

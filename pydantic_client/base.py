@@ -58,7 +58,8 @@ class BaseWebClient(ABC):
             base_url=config['base_url'],
             headers=config.get('headers'),
             timeout=config.get('timeout', 30),
-            session=config.get('session', None)
+            session=config.get('session', None),
+            statsd_address=config.get('statsd_address')
         )
     
     def before_request(self, request_params: Dict[str, Any]) -> Dict[str, Any]:

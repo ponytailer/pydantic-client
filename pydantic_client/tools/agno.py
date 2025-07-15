@@ -1,3 +1,5 @@
+import inspect
+
 from typing import Any, Dict, List, Optional
 from functools import wraps
 from inspect import Parameter, signature
@@ -62,10 +64,13 @@ def create_agno_tool(func: callable, description: Optional[str] = None) -> Dict[
         if (isinstance(param.annotation, type) and 
             issubclass(param.annotation, BaseModel)):
             parameters[name]["properties"] = {
-                field_name: {"type": _get_parameter_type(field.annotation)}
-                for field_name, field in param.annotation.__annotations__.items()
+                field_name: {
+                    "type": _get_parameter_type(inspect.Parameter(
+                        field_name, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=field_type)
+                    )
+                }
+                for field_name, field_type in param.annotation.__annotations__.items()
             }
-    
     return {
         "name": func.__name__,
         "description": desc,
