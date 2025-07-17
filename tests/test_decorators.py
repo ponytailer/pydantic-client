@@ -12,7 +12,7 @@ class User(BaseModel):
 
 
 class TestSyncClient(RequestsWebClient):
-    @get("/users")
+    @get("/users?page={page}&per_page={per_page}&name=kk")
     def list_users(self, page: int = 1, per_page: int = 10):
         ...
 
@@ -26,7 +26,7 @@ class TestSyncClient(RequestsWebClient):
 
 
 class TestAsyncClient(AiohttpWebClient):
-    @get("/users")
+    @get("/users?page={page}&per_page={per_page}&name=kk")
     async def list_users(self, page: int = 1, per_page: int = 10):
         ...
 

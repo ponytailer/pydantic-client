@@ -1,4 +1,6 @@
 import inspect
+import re
+import warnings
 from functools import wraps
 from typing import Callable, Optional
 
@@ -7,33 +9,47 @@ from pydantic import BaseModel
 from .tools.agno import register_agno_tool
 from .schema import RequestInfo
 
+def _extract_path_and_query(path: str):
+    """
+    拆分 path、querystring，并返回:
+    - path_template: /users
+    - query_tpls: [("name", "name"), ("age", "age")] for /users?name={name}&age={age}
+    """
+    if '?' in path:
+        path_template, query = path.split('?', 1)
+        query_tpls = []
+        for pair in query.split('&'):
+            if '=' in pair:
+                k, v = pair.split('=', 1)
+                m = re.fullmatch(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}", v)
+                if m:
+                    query_tpls.append((k, m.group(1)))
+
+        return path_template, query_tpls
+    else:
+        return path, []
+
+def _warn_if_path_params_missing(path: str, func: Callable):
+    """注册时检查 path 中 {var} 是否都出现在 func 参数中"""
+    sig = inspect.signature(func)
+    func_params = set(sig.parameters) - {"self"}
+    path_part = path.split('?', 1)[0]
+    path_vars = set(re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', path_part))
+    missing = path_vars - func_params
+    if missing:
+        warnings.warn(
+            f"Function '{func.__name__}' missing parameters {missing} required by path '{path}'"
+        )
 
 def _process_request_params(
     func: Callable, method: str, path: str, form_body: bool, *args, **kwargs
 ) -> RequestInfo:
-    """
-    Extract and process request parameters from function arguments.
-
-    Args:
-        func: The decorated function
-        method: HTTP method (GET, POST, etc.)
-        path: URL path template with placeholders
-        form_body: Whether to send body as form data instead of JSON
-        *args, **kwargs: Function arguments
-
-    Returns:
-        RequestInfo containing processed request parameters
-    """
     sig = inspect.signature(func)
     bound_args = sig.bind(*args, **kwargs)
     bound_args.apply_defaults()
     params = dict(bound_args.arguments)
-    params.pop("self")
-
-    # Handle request headers if provided
+    params.pop("self", None)
     request_headers = params.pop("request_headers", None)
-
-    # Get return type for response model
     return_type = sig.return_annotation
 
     if isinstance(return_type, type) and issubclass(return_type, BaseModel):
@@ -43,26 +59,30 @@ def _process_request_params(
     else:
         response_model = None
 
-    # Format path with parameters
-    formatted_path = path.format(**params)
-
-    # Remove path parameters from params dict
-    for key in path.split("{")[1:]:
-        key = key.split("}")[0]
-        params.pop(key, None)
-
-    # Handle Pydantic models in parameters
-    body_data = None
+    # 1. path/querystring 拆分
+    raw_path, query_tpls = _extract_path_and_query(path)
+    # 2. 渲染 path 参数（必须全部存在，否则format会KeyError，前面已warn过）
+    formatted_path = raw_path.format(**{k: params[k] for k in re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path)})
+    # 3. 从 params 删除已用于 path 的
+    # for k in re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path):
+        # params.pop(k, None)
+    # 4. 处理 querystring 模板参数 —— 只有非None才加
     query_params = {}
-
+    for k, v_name in query_tpls:
+        v = params.pop(v_name, None)
+        if v is not None:
+            query_params[k] = v
+    
+    # 5. 剩余参数，GET/DELETE 做 query，POST/PUT/PATCH 做 body
+    body_data = None
     for param_name, param_value in params.items():
         if isinstance(param_value, BaseModel):
             if method in ["POST", "PUT", "PATCH"]:
-                # Use model as JSON/form body
                 body_data = param_value.model_dump()
-        else:
-            if method in ["GET", "DELETE"]:
-                query_params[param_name] = param_value
+        # else:
+            # if method in ["GET", "DELETE"]:
+                # if param_value is not None:
+                    # query_params[param_name] = param_value
 
     info = {
         "method": method,
@@ -83,55 +103,20 @@ def _process_request_params(
     }
     return RequestInfo.model_validate(info)
 
-
 def rest(
     method: str, 
     form_body: bool = False,
     agno_tool: bool = False,
     tool_description: Optional[str] = None
 ) -> Callable:
-    """
-    Create a REST decorator for the specified HTTP method.
-
-    Args:
-        method: HTTP method (GET, POST, PUT, PATCH, DELETE)
-        form_body: Whether to send request body as form data instead of JSON
-        agno_tool: Register as Agno tool
-        tool_description: Custom description for the Agno tool
-
-    Returns:
-        Decorator function that accepts a path template
-    """
-
     def decorator(path: str) -> Callable:
-        """
-        Decorator that accepts a URL path template.
-
-        Args:
-            path: URL path template with optional placeholders like
-                "/users/{user_id}"
-
-        Returns:
-            Wrapper function for the decorated method
-        """
-
         def wrapper(func: Callable) -> Callable:
-            """
-            Wrapper that handles both sync and async requests.
-
-            Args:
-                func: The function being decorated
-
-            Returns:
-                Function that determines whether to use sync or async
-                based on client type
-            """
+            _warn_if_path_params_missing(path, func)
             if agno_tool:
                 func = register_agno_tool(tool_description)(func)
 
             @wraps(func)
             async def async_wrapped(self, *args, **kwargs):
-                """Async wrapper for handling HTTP requests."""
                 request_params = _process_request_params(
                     func, method, path, form_body, self, *args, **kwargs
                 )
@@ -139,7 +124,6 @@ def rest(
 
             @wraps(func)
             def sync_wrapped(self, *args, **kwargs):
-                """Sync wrapper for handling HTTP requests."""
                 request_params = _process_request_params(
                     func, method, path, form_body, self, *args, **kwargs
                 )
@@ -147,8 +131,6 @@ def rest(
 
             @wraps(func)
             def choose_wrapper(self, *args, **kwargs):
-                """Choose between sync and async wrapper based on client
-                type."""
                 if inspect.iscoroutinefunction(self._request):
                     return async_wrapped(self, *args, **kwargs)
                 return sync_wrapped(self, *args, **kwargs)
@@ -159,23 +141,14 @@ def rest(
 
     return decorator
 
-
-# HTTP method decorators
 get = rest("GET")
 delete = rest("DELETE")
 
-
-# For HTTP methods that support form_body parameter, create wrapper functions
 def post(path: str, form_body: bool = False) -> Callable:
-    """POST decorator that supports form_body parameter."""
     return rest("POST", form_body=form_body)(path)
 
-
 def put(path: str, form_body: bool = False) -> Callable:
-    """PUT decorator that supports form_body parameter."""
     return rest("PUT", form_body=form_body)(path)
 
-
 def patch(path: str, form_body: bool = False) -> Callable:
-    """PATCH decorator that supports form_body parameter."""
     return rest("PATCH", form_body=form_body)(path)
