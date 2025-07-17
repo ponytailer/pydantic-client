@@ -141,14 +141,48 @@ def rest(
 
     return decorator
 
-get = rest("GET")
-delete = rest("DELETE")
 
-def post(path: str, form_body: bool = False) -> Callable:
-    return rest("POST", form_body=form_body)(path)
+def get(
+    path: str,
+    agno_tool: bool = False,
+    tool_description: Optional[str] = None
+) -> Callable:
+    return rest("GET", agno_tool=agno_tool, tool_description=tool_description)(path)
 
-def put(path: str, form_body: bool = False) -> Callable:
-    return rest("PUT", form_body=form_body)(path)
 
-def patch(path: str, form_body: bool = False) -> Callable:
-    return rest("PATCH", form_body=form_body)(path)
+def delete(
+    path: str,
+    agno_tool: bool = False,
+    tool_description: Optional[str] = None
+) -> Callable:
+    return rest("DELETE", agno_tool=agno_tool, tool_description=tool_description)(path)
+
+
+def post(
+    path: str,
+    form_body: bool = False,
+    agno_tool: bool = False,
+    tool_description: Optional[str] = None
+) -> Callable:
+    return rest("POST", form_body=form_body,
+                agno_tool=agno_tool, tool_description=tool_description)(path)
+
+
+def put(
+    path: str,
+    form_body: bool = False,
+    agno_tool: bool = False,
+    tool_description: Optional[str] = None
+) -> Callable:
+    return rest("PUT", form_body=form_body,
+                agno_tool=agno_tool, tool_description=tool_description)(path)
+
+
+def patch(
+    path: str,
+    form_body: bool = False,
+    agno_tool: bool = False,
+    tool_description: Optional[str] = None
+) -> Callable:
+    return rest("PATCH", form_body=form_body,
+                agno_tool=agno_tool, tool_description=tool_description)(path)
