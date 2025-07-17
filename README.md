@@ -84,12 +84,12 @@ class MyAPIClient(RequestsWebClient):
     def create_user(self, user: CreateUser) -> UserResponse:
         pass
 
-    @get("/users/string)
-    def get_user_string(self, user_id: str) -> dict:
+    @get("/users/string?name={name})
+    def get_user_string(self, name: Optional[str] = None) -> dict:
         # will get raw json data
         ...
     
-    @get("/users/bytes")
+    @get("/users/{user_id}/bytes")
     def get_user_bytes(self, user_id: str) -> bytes:
         # will get raw content, bytes type.
         ...
