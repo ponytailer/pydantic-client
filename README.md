@@ -47,7 +47,6 @@ See the [`example/`](./example/) directory for real-world usage of this library,
 - `example_aiohttp.py`: Async usage with AiohttpWebClient
 - `example_tools.py`: How to register and use Agno tools
 
-Each file is fully commented in English and can be run directly for reference.
 
 ## Quick Start
 
@@ -155,7 +154,6 @@ def get_user_post(self, user_id: int, post_id: int) -> PostResponse:
 ```python
 
 # you can call signature by your self, overwrite the function `before_request`
-from pydantic_client.schema import RequestInfo
 
 
 class MyAPIClient(RequestsWebClient):
