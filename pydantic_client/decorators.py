@@ -100,6 +100,7 @@ def _process_request_params(
         ),
         "headers": request_headers,
         "response_model": response_model,
+        "function_name": func.__name__,  # 保存原始函数名
     }
     return RequestInfo.model_validate(info)
 

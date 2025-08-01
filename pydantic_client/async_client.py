@@ -1,8 +1,11 @@
 from typing import Any, Dict, Optional, TypeVar
+import logging
 
 from pydantic import BaseModel
 
 from .base import BaseWebClient, RequestInfo
+
+logger = logging.getLogger(__name__)
 
 try:
     import aiohttp
@@ -25,25 +28,30 @@ class AiohttpWebClient(BaseWebClient):
         super().__init__(base_url, headers, timeout, session, statsd_address)
 
     async def _request(self, request_info: RequestInfo) -> Any:
+        # Check if there's a mock response for this method
+        mock_response = self._get_mock_response(request_info)
+        if mock_response:
+            return mock_response
+
+        import aiohttp
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
 
         request_params = self.before_request(request_params)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.request(
-                **request_params,
-                timeout=aiohttp.ClientTimeout(total=self.timeout)
-            ) as response:
-                response.raise_for_status()
+        if not self.session:
+            self.session = aiohttp.ClientSession()
 
-                if response_model is str:
-                    return await response.text()
-                elif response_model is bytes:
-                    return await response.content.read()
-                elif not response_model:
-                    return await response.json()
-                return response_model.model_validate(await response.json(), from_attributes=True)
+        async with self.session.request(**request_params) as response:
+            response.raise_for_status()
+
+            if response_model is str:
+                return await response.text()
+            elif response_model is bytes:
+                return await response.content.read()
+            elif not response_model:
+                return await response.json()
+            return response_model.model_validate(await response.json(), from_attributes=True)
 
 
 class HttpxWebClient(BaseWebClient):
@@ -63,6 +71,12 @@ class HttpxWebClient(BaseWebClient):
             raise ImportError("please install httpx: `pip install httpx`")
 
     async def _request(self, request_info: RequestInfo) -> Any:
+        # Check if there's a mock response for this method
+        mock_response = self._get_mock_response(request_info)
+        if mock_response:
+            return mock_response
+            
+        # 没有mock数据，继续进行正常请求
         import httpx
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
