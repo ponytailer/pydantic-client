@@ -1,0 +1,20 @@
+[
+    {
+        "name": "get_users",
+        "output": {
+            "users": [
+                {"name": "file_user1", "age": 30, "email": "user1@example.com"},
+                {"name": "file_user2", "age": 25, "email": "user2@example.com"}
+            ],
+            "total": 2
+        }
+    },
+    {
+        "name": "get_user",
+        "output": {
+            "name": "file_user",
+            "age": 35,
+            "email": "file_user@example.com"
+        }
+    }
+]

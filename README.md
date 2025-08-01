@@ -213,6 +213,94 @@ client = MyAPIClient.from_config(config)
 The library automatically validates responses against Pydantic models when specified as return types
 in the method definitions.
 
+## Mock API Responses
+
+You can configure the client to return mock responses instead of making actual API calls. This is useful for testing or development purposes.
+
+### Setting Mock Responses Directly
+
+```python
+from pydantic_client import RequestsWebClient, get
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+
+class MyClient(RequestsWebClient):
+    @get("/users/{user_id}")
+    def get_user(self, user_id: int) -> UserResponse:
+        pass
+
+# Create client and configure mocks
+client = MyClient(base_url="https://api.example.com")
+client.set_mock_config(mock_config=[
+    {
+        "name": "get_user",
+        "output": {
+            "id": 123,
+            "name": "Mock User"
+        }
+    }
+])
+
+# This will return the mock response without making an actual API call
+user = client.get_user(1)  # Returns UserResponse(id=123, name="Mock User")
+```
+
+### Loading Mock Responses from a JSON File
+
+You can also load mock configurations from a JSON file:
+
+```python
+# Load mock data from a JSON file
+client.set_mock_config(mock_config_path="path/to/mock_data.json")
+```
+
+The JSON file should follow this format:
+
+```json
+[
+    {
+        "name": "get_user",
+        "output": {
+            "id": 123,
+            "name": "Mock User"
+        }
+    },
+    {
+        "name": "list_users",
+        "output": {
+            "users": [
+                {"id": 1, "name": "User 1"},
+                {"id": 2, "name": "User 2"}
+            ]
+        }
+    }
+]
+```
+
+### Setting Mock Responses in Client Configuration
+
+You can also include mock configuration when creating a client from configuration:
+
+```python
+config = {
+    "base_url": "https://api.example.com",
+    "timeout": 10,
+    "mock_config": [
+        {
+            "name": "get_user",
+            "output": {
+                "id": 123,
+                "name": "Mock User"
+            }
+        }
+    ]
+}
+
+client = MyClient.from_config(config)
+```
+
 ## Error Handling
 
 HTTP errors are raised as exceptions by the underlying HTTP client libraries. Make sure to handle

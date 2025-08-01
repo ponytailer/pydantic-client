@@ -1,7 +1,7 @@
 import inspect
+import json
 import logging
 import time
-import re
 import statsd
 
 from abc import ABC, abstractmethod
@@ -95,16 +95,17 @@ class BaseWebClient(ABC):
         return request_params
 
     def set_mock_config(
-            self, 
-            mock_config_path: Optional[str] = None,
-            mock_config: Optional[List[Dict[str, Any]]] = None
-        ) -> None:
+        self,
+        *,
+        mock_config_path: Optional[str] = None,
+        mock_config: Optional[List[Dict[str, Any]]] = None
+    ) -> None:
         """
         Set mock configuration for API responses.
         
         Example:
         ```python
-        client.set_mock_config([
+        client.set_mock_config(mock_config=[
             {
                 "name": "get_users",
                 "output": {
@@ -116,20 +117,28 @@ class BaseWebClient(ABC):
         ])
         ```
         
+        or from file:
+        ```python
+        client.set_mock_config(mock_config_path="path/to/mock_config.json")
+        ```
+        
         Args:
+            mock_config_path: Path to JSON file containing mock configurations
             mock_config: List of dicts with 'name' and 'output' keys
         """
+        
         if mock_config_path:
-            import json
             with open(mock_config_path, 'r') as f:
-                mock_config = json.load(f)
+                mock_config_data = json.load(f)
+        else:
+            mock_config_data = mock_config
 
-        if not isinstance(mock_config, list):
+        if not isinstance(mock_config_data, list):
             raise ValueError("Mock config must be a list")
             
         self._mock_config = {
             item["name"]: item["output"]
-            for item in mock_config if "name" in item and "output" in item
+            for item in mock_config_data if "name" in item and "output" in item
         }
         if self._mock_config:
             logger.warning("Mock configuration enabled - API calls will return mock data")

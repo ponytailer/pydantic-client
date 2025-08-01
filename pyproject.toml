@@ -1,12 +1,12 @@
 [project]
 name = "pydantic-client"
-version = "2.0.1"
+version = "2.0.2"
 description = "Http client base pydantic, with requests or aiohttp"
 authors = [
     {name = "ponytailer", email = "huangxiaohen2738@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 homepage = "https://github.com/ponytailer/pydantic-client"
 dependencies = [
     "pydantic>=2.1",
