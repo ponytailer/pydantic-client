@@ -6,7 +6,7 @@ authors = [
     {name = "ponytailer", email = "huangxiaohen2738@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 homepage = "https://github.com/ponytailer/pydantic-client"
 dependencies = [
     "pydantic>=2.1",
