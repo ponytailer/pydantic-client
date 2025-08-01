@@ -33,8 +33,7 @@ supporting both synchronous and asynchronous operations.
 ## Installation
 
 ```bash
-# Finding my pypi recovery code, then publish release version on pypi, maybe a month later.
-pip install https://github.com/ponytailer/pydantic-client.git
+pip install pydantic-client
 ```
 
 
