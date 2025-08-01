@@ -1,9 +1,8 @@
 # Pydantic Client
 
 [![codecov](https://codecov.io/gh/ponytailer/pydantic-client/branch/main/graph/badge.svg?token=CZX5V1YP22)](https://codecov.io/gh/ponytailer/pydantic-client)
-[![Upload Python Package](https://github.com/ponytailer/pydantic-client/actions/workflows/python-publish.yml/badge.svg)](https://github.com/ponytailer/pydantic-client/actions/workflows/python-publish.yml)
 [![PyPI version](https://badge.fury.io/py/pydantic-client.svg)](https://badge.fury.io/py/pydantic-client)
-[![Python Version](https://img.shields.io/pypi/pyversions/pydantic-client.svg)](https://pypi.org/project/pydantic-client/)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://pypi.org/project/pydantic-client/)
 [![Downloads](https://pepy.tech/badge/pydantic-client)](https://pepy.tech/project/pydantic-client)
 [![License](https://img.shields.io/github/license/ponytailer/pydantic-client.svg)](https://github.com/ponytailer/pydantic-client/blob/main/LICENSE)
 
