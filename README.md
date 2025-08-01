@@ -170,49 +170,6 @@ user = client.get_user("123")
 
 ```
 
-
-### Timing Context Manager
-
-All clients support a span context manager for simple API call timing and logging:
-
-```python
-with client.span(prefix="fetch_user"):
-    user = client.get_user_by_id("123")
-# Logs the elapsed time for the API call, useful for performance monitoring.
-
-# will send `fetch_user.elapsed` to statsd
-client = MyAPIClient(base_url="https://localhost", statsd_address="localhost:8125")
-with client.span(prefix="fetch_user"):
-    user = client.get_user_by_id("123")
-
-```
-
-## Configuration
-
-You can initialize clients with custom configurations:
-
-```python
-client = MyAPIClient(
-    base_url="https://api.example.com",
-    headers={"Custom-Header": "value"},
-    session=requests.Session(),  # your own session
-    timeout=30  # in seconds
-)
-
-# Or using configuration dictionary
-config = {
-    "base_url": "https://api.example.com",
-    "headers": {"Custom-Header": "value"},
-    "timeout": 30
-}
-client = MyAPIClient.from_config(config)
-```
-
-## Type Safety
-
-The library automatically validates responses against Pydantic models when specified as return types
-in the method definitions.
-
 ## Mock API Responses
 
 You can configure the client to return mock responses instead of making actual API calls. This is useful for testing or development purposes.
@@ -300,6 +257,49 @@ config = {
 
 client = MyClient.from_config(config)
 ```
+
+### Timing Context Manager
+
+All clients support a span context manager for simple API call timing and logging:
+
+```python
+with client.span(prefix="fetch_user"):
+    user = client.get_user_by_id("123")
+# Logs the elapsed time for the API call, useful for performance monitoring.
+
+# will send `fetch_user.elapsed` to statsd
+client = MyAPIClient(base_url="https://localhost", statsd_address="localhost:8125")
+with client.span(prefix="fetch_user"):
+    user = client.get_user_by_id("123")
+
+```
+
+## Configuration
+
+You can initialize clients with custom configurations:
+
+```python
+client = MyAPIClient(
+    base_url="https://api.example.com",
+    headers={"Custom-Header": "value"},
+    session=requests.Session(),  # your own session
+    timeout=30  # in seconds
+)
+
+# Or using configuration dictionary
+config = {
+    "base_url": "https://api.example.com",
+    "headers": {"Custom-Header": "value"},
+    "timeout": 30
+}
+client = MyAPIClient.from_config(config)
+```
+
+## Type Safety
+
+The library automatically validates responses against Pydantic models when specified as return types
+in the method definitions.
+
 
 ## Error Handling
 
