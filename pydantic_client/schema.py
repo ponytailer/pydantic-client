@@ -11,3 +11,4 @@ class RequestInfo(BaseModel):
     data: Optional[Dict[str, Any]] = None
     headers: Optional[Dict[str, Any]] = {}
     response_model: Optional[Any] = None
+    function_name: Optional[str] = None

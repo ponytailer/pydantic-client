@@ -1,6 +1,7 @@
 import inspect
 import logging
 import time
+import re
 import statsd
 
 from abc import ABC, abstractmethod
@@ -46,6 +47,7 @@ class BaseWebClient(ABC):
         self.timeout = timeout
         self.session = session
         self._statsd_client = None
+        self._mock_config: Dict[str, Any] = {}
 
         if statsd_address:
             host, port = statsd_address.split(':')
@@ -54,13 +56,19 @@ class BaseWebClient(ABC):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> 'BaseWebClient':
-        return cls(
+        client = cls(
             base_url=config['base_url'],
             headers=config.get('headers'),
             timeout=config.get('timeout', 30),
             session=config.get('session', None),
             statsd_address=config.get('statsd_address')
         )
+        
+        # Set mock config if provided
+        if 'mock_config' in config:
+            client.set_mock_config(mock_config=config['mock_config'])
+            
+        return client
     
     def before_request(self, request_params: Dict[str, Any]) -> Dict[str, Any]:
         """before request, you can do something by yourself
@@ -83,8 +91,68 @@ class BaseWebClient(ABC):
         
         request_params["headers"] = request_headers
         request_params["url"] = url
+        request_params.pop("function_name", None)
         return request_params
 
+    def set_mock_config(
+            self, 
+            mock_config_path: Optional[str] = None,
+            mock_config: Optional[List[Dict[str, Any]]] = None
+        ) -> None:
+        """
+        Set mock configuration for API responses.
+        
+        Example:
+        ```python
+        client.set_mock_config([
+            {
+                "name": "get_users",
+                "output": {
+                    "users": [
+                        {"name": "john", "age": 1}
+                    ]
+                }
+            }
+        ])
+        ```
+        
+        Args:
+            mock_config: List of dicts with 'name' and 'output' keys
+        """
+        if mock_config_path:
+            import json
+            with open(mock_config_path, 'r') as f:
+                mock_config = json.load(f)
+
+        if not isinstance(mock_config, list):
+            raise ValueError("Mock config must be a list")
+            
+        self._mock_config = {
+            item["name"]: item["output"]
+            for item in mock_config if "name" in item and "output" in item
+        }
+        if self._mock_config:
+            logger.warning("Mock configuration enabled - API calls will return mock data")
+    
+    def _get_mock_response(self, request_info: RequestInfo) -> Optional[Any]:
+        """Get mock response for a method if available in mock config"""
+        if not self._mock_config:
+            return
+
+        name = request_info.function_name
+        
+        if name not in self._mock_config:
+            logger.warning(f"No mock found for method: {name}")
+            return
+            
+        mock_response = self._mock_config[name]
+        response_model = request_info.response_model
+        if response_model and not isinstance(response_model, type) or response_model in (str, bytes):
+            return mock_response
+        elif response_model:
+            return response_model.model_validate(mock_response, from_attributes=True)
+        return mock_response
+        
     @abstractmethod
     def _request(self, request_info: RequestInfo) -> Any:
         ...

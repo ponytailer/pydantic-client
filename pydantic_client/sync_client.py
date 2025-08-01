@@ -1,9 +1,12 @@
 from typing import Any, Dict, Optional, TypeVar
+import logging
 
 import requests
 from pydantic import BaseModel
 
 from .base import BaseWebClient, RequestInfo
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar('T', bound=BaseModel)
 
@@ -22,6 +25,11 @@ class RequestsWebClient(BaseWebClient):
             self.session = requests.Session()
 
     def _request(self, request_info: RequestInfo) -> Any:
+        # Check if there's a mock response for this method
+        mock_response = self._get_mock_response(request_info)
+        if mock_response:
+            return mock_response
+
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
 
