@@ -1,6 +1,6 @@
 [project]
 name = "pydantic-client"
-version = "2.0.2"
+version = "2.0.3"
 description = "Http client base pydantic, with requests or aiohttp"
 authors = [
     {name = "ponytailer", email = "huangxiaohen2738@gmail.com"}

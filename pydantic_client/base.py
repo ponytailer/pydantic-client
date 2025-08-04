@@ -3,9 +3,10 @@ import json
 import logging
 import time
 import statsd
+import re
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, TypeVar, List
+from typing import Any, Dict, Optional, TypeVar, List, Type, get_origin, get_args
 
 from pydantic import BaseModel
 from .schema import RequestInfo
@@ -92,6 +93,7 @@ class BaseWebClient(ABC):
         request_params["headers"] = request_headers
         request_params["url"] = url
         request_params.pop("function_name", None)
+        # response_extract_path 会在 _request 方法中处理，所以保留
         return request_params
 
     def set_mock_config(
@@ -146,17 +148,23 @@ class BaseWebClient(ABC):
     def _get_mock_response(self, request_info: RequestInfo) -> Optional[Any]:
         """Get mock response for a method if available in mock config"""
         if not self._mock_config:
-            return
+            return None
 
         name = request_info.function_name
         
         if name not in self._mock_config:
             logger.warning(f"No mock found for method: {name}")
-            return
+            return None
             
         mock_response = self._mock_config[name]
         response_model = request_info.response_model
-        if response_model and not isinstance(response_model, type) or response_model in (str, bytes):
+
+
+        extract_path = request_info.response_extract_path
+
+        if extract_path:
+            return self._extract_nested_data(mock_response, extract_path, response_model)
+        elif response_model and not isinstance(response_model, type) or response_model in (str, bytes):
             return mock_response
         elif response_model:
             return response_model.model_validate(mock_response, from_attributes=True)
@@ -165,7 +173,50 @@ class BaseWebClient(ABC):
     @abstractmethod
     def _request(self, request_info: RequestInfo) -> Any:
         ...
-    
+        
+    def _extract_nested_data(self, data: Dict[str, Any], path: str, model_type: Type) -> Any:
+        """
+        Extract and parse data from nested response data
+        
+        Args:
+            data: JSON response data
+            path: JSON path expression, e.g. "$.data.user" or "$.data.items[0]"
+            model_type: Pydantic model type for parsing the extracted data
+        """
+        # Preprocess path, remove $ prefix
+        if path.startswith('$'):
+            path = path[2:].lstrip('.')
+            
+        # Extract all components from the path
+        path_components = re.split(r'\.|\[|\]', path)
+        path_components = [p for p in path_components if p]
+        
+        current = data
+        for component in path_components:
+            if component.isdigit():
+                idx = int(component)
+                if isinstance(current, list) and 0 <= idx < len(current):
+                    current = current[idx]
+                else:
+                    return None
+            elif isinstance(current, dict):
+                current = current.get(component)
+                if current is None:
+                    return None
+            else:
+                return None
+        
+        if current is not None:
+            # Handle list types
+            origin = get_origin(model_type)
+            
+            if origin is list or origin is List:
+                item_type = get_args(model_type)[0]
+                if isinstance(current, list):
+                    return [item_type.model_validate(item) for item in current]
+            elif hasattr(model_type, 'model_validate'):
+                return model_type.model_validate(current)
+        return current
 
     def register_agno_tools(self, agent):
         """

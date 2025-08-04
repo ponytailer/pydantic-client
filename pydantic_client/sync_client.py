@@ -27,11 +27,12 @@ class RequestsWebClient(BaseWebClient):
     def _request(self, request_info: RequestInfo) -> Any:
         # Check if there's a mock response for this method
         mock_response = self._get_mock_response(request_info)
-        if mock_response:
+        if mock_response is not None:
             return mock_response
 
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
+        extract_path = request_params.pop("response_extract_path", None)
 
         request_params = self.before_request(request_params)
 
@@ -42,6 +43,14 @@ class RequestsWebClient(BaseWebClient):
             return response.text
         elif response_model is bytes:
             return response.content
-        elif not response_model:
+        elif extract_path:
+            # Process nested path extraction
+            return self._extract_nested_data(response.json(), extract_path, response_model)
+        elif not response_model or response_model is dict or getattr(response_model, '__module__', None) == 'inspect':
             return response.json()
-        return response_model.model_validate(response.json(), from_attributes=True)
+        elif hasattr(response_model, 'model_validate'):
+            return response_model.model_validate(response.json(), from_attributes=True)
+        else:
+            return response.json()
+        
+
