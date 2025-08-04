@@ -30,12 +30,13 @@ class AiohttpWebClient(BaseWebClient):
     async def _request(self, request_info: RequestInfo) -> Any:
         # Check if there's a mock response for this method
         mock_response = self._get_mock_response(request_info)
-        if mock_response:
+        if mock_response is not None:
             return mock_response
 
         import aiohttp
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
+        extract_path = request_params.pop("response_extract_path", None)  # 获取嵌套路径参数
 
         request_params = self.before_request(request_params)
 
@@ -49,9 +50,16 @@ class AiohttpWebClient(BaseWebClient):
                 return await response.text()
             elif response_model is bytes:
                 return await response.content.read()
-            elif not response_model:
-                return await response.json()
-            return response_model.model_validate(await response.json(), from_attributes=True)
+            
+            json_data = await response.json()
+            if extract_path:
+                return self._extract_nested_data(json_data, extract_path, response_model)
+            elif not response_model or response_model is dict or getattr(response_model, '__module__', None) == 'inspect':
+                return json_data
+            elif hasattr(response_model, 'model_validate'):
+                return response_model.model_validate(json_data, from_attributes=True)
+            else:
+                return json_data
 
 
 class HttpxWebClient(BaseWebClient):
@@ -73,13 +81,14 @@ class HttpxWebClient(BaseWebClient):
     async def _request(self, request_info: RequestInfo) -> Any:
         # Check if there's a mock response for this method
         mock_response = self._get_mock_response(request_info)
-        if mock_response:
+        if mock_response is not None:
             return mock_response
             
         # 没有mock数据，继续进行正常请求
         import httpx
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
+        extract_path = request_params.pop("response_extract_path", None)  # 获取嵌套路径参数
 
         request_params = self.before_request(request_params)
 
@@ -91,6 +100,13 @@ class HttpxWebClient(BaseWebClient):
                 return response.text
             elif response_model is bytes:
                 return response.content
-            elif not response_model:
-                return response.json()
-            return response_model.model_validate(response.json(), from_attributes=True)
+                
+            json_data = response.json()
+            if extract_path:
+                return self._extract_nested_data(json_data, extract_path, response_model)
+            elif not response_model or response_model is dict or getattr(response_model, '__module__', None) == 'inspect':
+                return json_data
+            elif hasattr(response_model, 'model_validate'):
+                return response_model.model_validate(json_data, from_attributes=True)
+            else:
+                return json_data

@@ -42,7 +42,7 @@ def _warn_if_path_params_missing(path: str, func: Callable):
         )
 
 def _process_request_params(
-    func: Callable, method: str, path: str, form_body: bool, *args, **kwargs
+    func: Callable, method: str, path: str, form_body: bool, response_extract_path: Optional[str] = None, *args, **kwargs
 ) -> RequestInfo:
     sig = inspect.signature(func)
     bound_args = sig.bind(*args, **kwargs)
@@ -50,39 +50,32 @@ def _process_request_params(
     params = dict(bound_args.arguments)
     params.pop("self", None)
     request_headers = params.pop("request_headers", None)
+    
+ 
     return_type = sig.return_annotation
-
     if isinstance(return_type, type) and issubclass(return_type, BaseModel):
         response_model = return_type
     elif return_type in [str, bytes]:
         response_model = return_type
     else:
-        response_model = None
-
-    # 1. path/querystring 拆分
+        response_model = return_type
     raw_path, query_tpls = _extract_path_and_query(path)
-    # 2. 渲染 path 参数（必须全部存在，否则format会KeyError，前面已warn过）
-    formatted_path = raw_path.format(**{k: params[k] for k in re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path)})
-    # 3. 从 params 删除已用于 path 的
-    # for k in re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path):
-        # params.pop(k, None)
-    # 4. 处理 querystring 模板参数 —— 只有非None才加
+
+    formatted_path = raw_path.format(**{
+        k: params[k] for k in re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path)
+    })
+
     query_params = {}
     for k, v_name in query_tpls:
         v = params.pop(v_name, None)
         if v is not None:
             query_params[k] = v
     
-    # 5. 剩余参数，GET/DELETE 做 query，POST/PUT/PATCH 做 body
     body_data = None
     for param_name, param_value in params.items():
         if isinstance(param_value, BaseModel):
             if method in ["POST", "PUT", "PATCH"]:
                 body_data = param_value.model_dump()
-        # else:
-            # if method in ["GET", "DELETE"]:
-                # if param_value is not None:
-                    # query_params[param_name] = param_value
 
     info = {
         "method": method,
@@ -100,7 +93,8 @@ def _process_request_params(
         ),
         "headers": request_headers,
         "response_model": response_model,
-        "function_name": func.__name__,  # 保存原始函数名
+        "function_name": func.__name__,
+        "response_extract_path": response_extract_path
     }
     return RequestInfo.model_validate(info)
 
@@ -108,7 +102,8 @@ def rest(
     method: str, 
     form_body: bool = False,
     agno_tool: bool = False,
-    tool_description: Optional[str] = None
+    tool_description: Optional[str] = None,
+    response_extract_path: Optional[str] = None
 ) -> Callable:
     def decorator(path: str) -> Callable:
         def wrapper(func: Callable) -> Callable:
@@ -119,14 +114,14 @@ def rest(
             @wraps(func)
             async def async_wrapped(self, *args, **kwargs):
                 request_params = _process_request_params(
-                    func, method, path, form_body, self, *args, **kwargs
+                    func, method, path, form_body, response_extract_path, self, *args, **kwargs
                 )
                 return await self._request(request_params)
 
             @wraps(func)
             def sync_wrapped(self, *args, **kwargs):
                 request_params = _process_request_params(
-                    func, method, path, form_body, self, *args, **kwargs
+                    func, method, path, form_body, response_extract_path, self, *args, **kwargs
                 )
                 return self._request(request_params)
 
@@ -146,44 +141,74 @@ def rest(
 def get(
     path: str,
     agno_tool: bool = False,
-    tool_description: Optional[str] = None
+    tool_description: Optional[str] = None,
+    response_extract_path: Optional[str] = None
 ) -> Callable:
-    return rest("GET", agno_tool=agno_tool, tool_description=tool_description)(path)
+    return rest(
+        "GET", 
+        agno_tool=agno_tool, 
+        tool_description=tool_description,
+        response_extract_path=response_extract_path
+    )(path)
 
 
 def delete(
     path: str,
     agno_tool: bool = False,
-    tool_description: Optional[str] = None
+    tool_description: Optional[str] = None,
+    response_extract_path: Optional[str] = None
 ) -> Callable:
-    return rest("DELETE", agno_tool=agno_tool, tool_description=tool_description)(path)
+    return rest(
+        "DELETE", 
+        agno_tool=agno_tool, 
+        tool_description=tool_description,
+        response_extract_path=response_extract_path
+    )(path)
 
 
 def post(
     path: str,
     form_body: bool = False,
     agno_tool: bool = False,
-    tool_description: Optional[str] = None
+    tool_description: Optional[str] = None,
+    response_extract_path: Optional[str] = None
 ) -> Callable:
-    return rest("POST", form_body=form_body,
-                agno_tool=agno_tool, tool_description=tool_description)(path)
+    return rest(
+        "POST", 
+        form_body=form_body,
+        agno_tool=agno_tool, 
+        tool_description=tool_description,
+        response_extract_path=response_extract_path
+    )(path)
 
 
 def put(
     path: str,
     form_body: bool = False,
     agno_tool: bool = False,
-    tool_description: Optional[str] = None
+    tool_description: Optional[str] = None,
+    response_extract_path: Optional[str] = None
 ) -> Callable:
-    return rest("PUT", form_body=form_body,
-                agno_tool=agno_tool, tool_description=tool_description)(path)
+    return rest(
+        "PUT", 
+        form_body=form_body,
+        agno_tool=agno_tool, 
+        tool_description=tool_description,
+        response_extract_path=response_extract_path
+    )(path)
 
 
 def patch(
     path: str,
     form_body: bool = False,
     agno_tool: bool = False,
-    tool_description: Optional[str] = None
+    tool_description: Optional[str] = None,
+    response_extract_path: Optional[str] = None
 ) -> Callable:
-    return rest("PATCH", form_body=form_body,
-                agno_tool=agno_tool, tool_description=tool_description)(path)
+    return rest(
+        "PATCH", 
+        form_body=form_body,
+        agno_tool=agno_tool, 
+        tool_description=tool_description,
+        response_extract_path=response_extract_path
+    )(path)

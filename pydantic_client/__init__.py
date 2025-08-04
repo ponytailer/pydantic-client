@@ -12,5 +12,5 @@ __all__ = [
     "post",
     "put",
     "patch",
-    "delete",
+    "delete"
 ]

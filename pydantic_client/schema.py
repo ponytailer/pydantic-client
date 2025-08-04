@@ -1,5 +1,4 @@
 from typing import Dict, Optional, Any
-
 from pydantic import BaseModel
 
 
@@ -12,3 +11,4 @@ class RequestInfo(BaseModel):
     headers: Optional[Dict[str, Any]] = {}
     response_model: Optional[Any] = None
     function_name: Optional[str] = None
+    response_extract_path: Optional[str] = None

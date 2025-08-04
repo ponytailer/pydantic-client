@@ -22,6 +22,7 @@ supporting both synchronous and asynchronous operations.
 - ⚡ **Timing context manager**: Use `with client.span(prefix="myapi"):` to log timing for any API call, sync or async
 - 🔧 **Flexible configuration**: Easy client configuration with headers, timeouts, and more
 - 🔧 **convert api to llm tools**: API2Tools, support `agno`, others coming soon...
+- 🌟 **Nested Response Extraction**: Extract and parse deeply nested API responses using JSON path expressions
 
 ## TODO
 
@@ -44,6 +45,7 @@ See the [`example/`](./example/) directory for real-world usage of this library,
 - `example_httpx.py`: Async usage with HttpxWebClient
 - `example_aiohttp.py`: Async usage with AiohttpWebClient
 - `example_tools.py`: How to register and use Agno tools
+- `example_nested_response.py`: How to extract data from nested API responses
 
 
 ## Quick Start
@@ -169,6 +171,53 @@ user = client.get_user("123")
 
 ```
 
+## Handling Nested API Responses
+
+Many APIs return deeply nested JSON structures. Use the `response_extract_path` parameter to extract and parse specific data from complex API responses:
+
+```python
+from typing import List
+from pydantic import BaseModel
+from pydantic_client import RequestsWebClient, get
+
+class User(BaseModel):
+    id: str
+    name: str
+    email: str
+
+class MyClient(RequestsWebClient):
+    @get("/users/complex", response_extract_path="$.data.users")
+    def get_users_nested(self) -> List[User]:
+        """
+        Extracts the users list from a nested response structure
+        
+        Example response:
+        {
+            "status": "success",
+            "data": {
+                "users": [
+                    {"id": "1", "name": "Alice", "email": "alice@example.com"},
+                    {"id": "2", "name": "Bob", "email": "bob@example.com"}
+                ],
+                "total": 2
+            }
+        }
+        """
+        pass
+    
+    @get("/search", response_extract_path="$.results[0]")
+    def search_first_result(self) -> User:
+        """
+        Get just the first search result from an array
+        """
+        pass
+```
+
+The `response_extract_path` parameter defines where to find the data in the response. It supports:
+- Dot notation for object properties: `data.users`
+- Array indexing with square brackets: `results[0]`
+- Optional `$` prefix for root object: `$.data.users`
+
 ## Mock API Responses
 
 You can configure the client to return mock responses instead of making actual API calls. This is useful for testing or development purposes.
@@ -178,9 +227,11 @@ You can configure the client to return mock responses instead of making actual A
 ```python
 from pydantic_client import RequestsWebClient, get
 
+
 class UserResponse(BaseModel):
     id: int
     name: str
+
 
 class MyClient(RequestsWebClient):
     @get("/users/{user_id}")
