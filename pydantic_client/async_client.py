@@ -36,7 +36,7 @@ class AiohttpWebClient(BaseWebClient):
         import aiohttp
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
-        extract_path = request_params.pop("response_extract_path", None)  # 获取嵌套路径参数
+        extract_path = request_params.pop("response_extract_path", None)  # Get response extraction path parameter
 
         request_params = self.before_request(request_params)
 
@@ -84,11 +84,11 @@ class HttpxWebClient(BaseWebClient):
         if mock_response is not None:
             return mock_response
             
-        # 没有mock数据，继续进行正常请求
+        # No mock data, continue with the normal request
         import httpx
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
-        extract_path = request_params.pop("response_extract_path", None)  # 获取嵌套路径参数
+        extract_path = request_params.pop("response_extract_path", None)  # Get response extraction path parameter
 
         request_params = self.before_request(request_params)
 

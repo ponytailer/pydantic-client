@@ -11,7 +11,7 @@ from .schema import RequestInfo
 
 def _extract_path_and_query(path: str):
     """
-    拆分 path、querystring，并返回:
+    Split path and querystring, and return:
     - path_template: /users
     - query_tpls: [("name", "name"), ("age", "age")] for /users?name={name}&age={age}
     """
@@ -30,7 +30,7 @@ def _extract_path_and_query(path: str):
         return path, []
 
 def _warn_if_path_params_missing(path: str, func: Callable):
-    """注册时检查 path 中 {var} 是否都出现在 func 参数中"""
+    """Check if all {var} in path appear in func parameters during registration"""
     sig = inspect.signature(func)
     func_params = set(sig.parameters) - {"self"}
     path_part = path.split('?', 1)[0]

@@ -44,7 +44,7 @@ class RequestsWebClient(BaseWebClient):
         elif response_model is bytes:
             return response.content
         elif extract_path:
-            # 处理嵌套路径
+            # Process nested path extraction
             return self._extract_nested_data(response.json(), extract_path, response_model)
         elif not response_model or response_model is dict or getattr(response_model, '__module__', None) == 'inspect':
             return response.json()

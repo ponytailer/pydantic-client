@@ -176,18 +176,18 @@ class BaseWebClient(ABC):
         
     def _extract_nested_data(self, data: Dict[str, Any], path: str, model_type: Type) -> Any:
         """
-        从嵌套的响应数据中提取并解析数据
+        Extract and parse data from nested response data
         
         Args:
-            data: 响应的JSON数据
-            path: JSON路径表达式，例如 "$.data.user" 或 "$.data.items[0]"
-            model_type: 用于解析数据的Pydantic模型类型
+            data: JSON response data
+            path: JSON path expression, e.g. "$.data.user" or "$.data.items[0]"
+            model_type: Pydantic model type for parsing the extracted data
         """
-        # 预处理路径，移除$前缀
+        # Preprocess path, remove $ prefix
         if path.startswith('$'):
             path = path[2:].lstrip('.')
             
-        # 提取路径中的所有组件
+        # Extract all components from the path
         path_components = re.split(r'\.|\[|\]', path)
         path_components = [p for p in path_components if p]
         
@@ -207,7 +207,7 @@ class BaseWebClient(ABC):
                 return None
         
         if current is not None:
-            # 处理列表类型
+            # Handle list types
             origin = get_origin(model_type)
             
             if origin is list or origin is List:

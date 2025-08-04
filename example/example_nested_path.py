@@ -63,13 +63,13 @@ class NestedPathClient(RequestsWebClient):
 
 def main():
     """
-    这是一个如何使用 response_extract_path 参数的示例。
-    在实际应用中，您会调用真实的API。
+    This is an example of how to use the response_extract_path parameter.
+    In a real application, you would make actual API calls.
     """
-    # 创建客户端
+    # Create client
     client = NestedPathClient(base_url="https://api.example.com")
     
-    # 设置模拟响应，用于演示
+    # Setup mock responses for demonstration
     client.set_mock_config(mock_config=[
         {
             "name": "get_users_nested",
@@ -105,19 +105,19 @@ def main():
         }
     ])
     
-    # 获取嵌套结构中的所有用户
+    # Get all users from a nested structure
     users = client.get_users_nested()
-    print(f"获取到 {len(users)} 个用户:")
+    print(f"Got {len(users)} users:")
     for user in users:
         print(f"  - {user.name} ({user.email})")
     
-    # 通过ID获取单个用户
+    # Get a single user by ID
     user = client.get_user_by_id("1")
-    print(f"\n获取用户: {user.name} ({user.id})")
+    print(f"\nGot user: {user.name} ({user.id})")
     
-    # 获取搜索结果的第一项
+    # Get just the first search result
     first_result = client.search_first_result()
-    print(f"\n第一个搜索结果: {first_result.name}")
+    print(f"\nFirst search result: {first_result.name}")
 
 
 if __name__ == "__main__":

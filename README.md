@@ -18,9 +18,8 @@ supporting both synchronous and asynchronous operations.
 - ⚡ **Async/Sync support**: Work with both synchronous and asynchronous HTTP operations
 - 🎯 **Decorator-based API**: Clean, intuitive API definition with decorators
 - 📝 **OpenAPI/Swagger support**: Generate client code from OpenAPI specifications
-- 🛡️ **Automatic validation**: Request/response validation with Pydantic models
+- 🛡️ **Mock API Responses**: This is useful for testing or development purposes.
 - ⚡ **Timing context manager**: Use `with client.span(prefix="myapi"):` to log timing for any API call, sync or async
-- 🔧 **Flexible configuration**: Easy client configuration with headers, timeouts, and more
 - 🔧 **convert api to llm tools**: API2Tools, support `agno`, others coming soon...
 - 🌟 **Nested Response Extraction**: Extract and parse deeply nested API responses using JSON path expressions
 
@@ -214,9 +213,8 @@ class MyClient(RequestsWebClient):
 ```
 
 The `response_extract_path` parameter defines where to find the data in the response. It supports:
-- Dot notation for object properties: `data.users`
-- Array indexing with square brackets: `results[0]`
-- Optional `$` prefix for root object: `$.data.users`
+- Array indexing with square brackets: `$.results[0]` -> `User`
+- Optional `$` prefix for root object: `$.data.users` -> `list[User]`
 
 ## Mock API Responses
 
