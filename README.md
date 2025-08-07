@@ -342,14 +342,3 @@ config = {
 }
 client = MyAPIClient.from_config(config)
 ```
-
-## Type Safety
-
-The library automatically validates responses against Pydantic models when specified as return types
-in the method definitions.
-
-
-## Error Handling
-
-HTTP errors are raised as exceptions by the underlying HTTP client libraries. Make sure to handle
-these appropriately in your application.
