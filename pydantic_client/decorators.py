@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from .tools.agno import register_agno_tool
 from .schema import RequestInfo
 
+
 def _extract_path_and_query(path: str):
     """
     Split path and querystring, and return:
@@ -29,6 +30,7 @@ def _extract_path_and_query(path: str):
     else:
         return path, []
 
+
 def _warn_if_path_params_missing(path: str, func: Callable):
     """Check if all {var} in path appear in func parameters during registration"""
     sig = inspect.signature(func)
@@ -41,8 +43,10 @@ def _warn_if_path_params_missing(path: str, func: Callable):
             f"Function '{func.__name__}' missing parameters {missing} required by path '{path}'"
         )
 
+
 def _process_request_params(
-    func: Callable, method: str, path: str, form_body: bool, response_extract_path: Optional[str] = None, *args, **kwargs
+    func: Callable, method: str, path: str, form_body: bool,
+    response_extract_path: Optional[str] = None, *args, **kwargs
 ) -> RequestInfo:
     sig = inspect.signature(func)
     bound_args = sig.bind(*args, **kwargs)
@@ -50,8 +54,7 @@ def _process_request_params(
     params = dict(bound_args.arguments)
     params.pop("self", None)
     request_headers = params.pop("request_headers", None)
-    
- 
+
     return_type = sig.return_annotation
     if isinstance(return_type, type) and issubclass(return_type, BaseModel):
         response_model = return_type
@@ -62,7 +65,8 @@ def _process_request_params(
     raw_path, query_tpls = _extract_path_and_query(path)
 
     formatted_path = raw_path.format(**{
-        k: params[k] for k in re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path)
+        k: params[k] for k in
+        re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path)
     })
 
     query_params = {}
@@ -70,7 +74,7 @@ def _process_request_params(
         v = params.pop(v_name, None)
         if v is not None:
             query_params[k] = v
-    
+
     body_data = None
     for param_name, param_value in params.items():
         if isinstance(param_value, BaseModel):
@@ -98,8 +102,9 @@ def _process_request_params(
     }
     return RequestInfo.model_validate(info)
 
+
 def rest(
-    method: str, 
+    method: str,
     form_body: bool = False,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
@@ -114,14 +119,16 @@ def rest(
             @wraps(func)
             async def async_wrapped(self, *args, **kwargs):
                 request_params = _process_request_params(
-                    func, method, path, form_body, response_extract_path, self, *args, **kwargs
+                    func, method, path, form_body, response_extract_path, self,
+                    *args, **kwargs
                 )
                 return await self._request(request_params)
 
             @wraps(func)
             def sync_wrapped(self, *args, **kwargs):
                 request_params = _process_request_params(
-                    func, method, path, form_body, response_extract_path, self, *args, **kwargs
+                    func, method, path, form_body, response_extract_path, self,
+                    *args, **kwargs
                 )
                 return self._request(request_params)
 
@@ -138,6 +145,57 @@ def rest(
     return decorator
 
 
+def stream(
+    path: str,
+    encoder: Optional[Callable[[str], ...]] = None
+) -> Callable:
+    """
+    Decorator for streaming API endpoints.
+
+    Args:
+        path: API endpoint path with optional path parameters
+        encoder: Optional function to process each chunk of the stream
+    """
+
+    def decorator(func: Callable) -> Callable:
+        _warn_if_path_params_missing(path, func)
+
+        @wraps(func)
+        async def async_wrapped(self, *args, **kwargs):
+            request_params = _process_request_params(
+                func, "POST", path, False, None, self, *args, **kwargs
+            )
+            # Pass encoder to the request method
+            return await self._async_stream_request(request_params, encoder)
+
+        @wraps(func)
+        def sync_wrapped(self, *args, **kwargs):
+            request_params = _process_request_params(
+                func, "POST", path, False, None, self, *args, **kwargs
+            )
+            # Pass encoder to the request method
+            return self._stream_request(request_params, encoder)
+
+        @wraps(func)
+        def choose_wrapper(self, *args, **kwargs):
+            # Check if the client supports streaming
+            if (
+                hasattr(self, '_async_stream_request') and
+                inspect.iscoroutinefunction(
+                    getattr(self, '_async_stream_request'))
+            ):
+                return async_wrapped(self, *args, **kwargs)
+            elif hasattr(self, '_stream_request'):
+                return sync_wrapped(self, *args, **kwargs)
+            else:
+                raise NotImplementedError(
+                    "Streaming is not supported by this client")
+
+        return choose_wrapper
+
+    return decorator
+
+
 def get(
     path: str,
     agno_tool: bool = False,
@@ -145,8 +203,8 @@ def get(
     response_extract_path: Optional[str] = None
 ) -> Callable:
     return rest(
-        "GET", 
-        agno_tool=agno_tool, 
+        "GET",
+        agno_tool=agno_tool,
         tool_description=tool_description,
         response_extract_path=response_extract_path
     )(path)
@@ -159,8 +217,8 @@ def delete(
     response_extract_path: Optional[str] = None
 ) -> Callable:
     return rest(
-        "DELETE", 
-        agno_tool=agno_tool, 
+        "DELETE",
+        agno_tool=agno_tool,
         tool_description=tool_description,
         response_extract_path=response_extract_path
     )(path)
@@ -174,9 +232,9 @@ def post(
     response_extract_path: Optional[str] = None
 ) -> Callable:
     return rest(
-        "POST", 
+        "POST",
         form_body=form_body,
-        agno_tool=agno_tool, 
+        agno_tool=agno_tool,
         tool_description=tool_description,
         response_extract_path=response_extract_path
     )(path)
@@ -190,9 +248,9 @@ def put(
     response_extract_path: Optional[str] = None
 ) -> Callable:
     return rest(
-        "PUT", 
+        "PUT",
         form_body=form_body,
-        agno_tool=agno_tool, 
+        agno_tool=agno_tool,
         tool_description=tool_description,
         response_extract_path=response_extract_path
     )(path)
@@ -206,9 +264,9 @@ def patch(
     response_extract_path: Optional[str] = None
 ) -> Callable:
     return rest(
-        "PATCH", 
+        "PATCH",
         form_body=form_body,
-        agno_tool=agno_tool, 
+        agno_tool=agno_tool,
         tool_description=tool_description,
         response_extract_path=response_extract_path
     )(path)

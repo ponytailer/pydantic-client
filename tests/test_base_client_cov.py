@@ -1,4 +1,4 @@
-from pydantic_client.base import BaseWebClient, SpanContext
+from pydantic_client.clients.base import BaseWebClient, SpanContext
 from pydantic_client.schema import RequestInfo
 from pydantic_client.tools.agno import register_agno_tool
 

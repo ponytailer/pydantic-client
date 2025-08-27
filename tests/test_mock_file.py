@@ -3,7 +3,7 @@ import pytest
 from typing import List, Optional
 from pydantic import BaseModel
 
-from pydantic_client.sync_client import RequestsWebClient
+from pydantic_client.clients.sync_client import RequestsWebClient
 from pydantic_client.decorators import get, post
 
 

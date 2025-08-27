@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from pydantic_client.base import BaseWebClient
+from pydantic_client.clients.base import BaseWebClient
 from pydantic_client.tools.agno import register_agno_tool
 
 
