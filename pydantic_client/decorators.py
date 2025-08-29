@@ -138,6 +138,57 @@ def rest(
     return decorator
 
 
+def stream(
+    path: str,
+    encoder: Optional[Callable[[str], ...]] = None
+) -> Callable:
+    """
+    Decorator for streaming API endpoints.
+    
+    Args:
+        path: API endpoint path with optional path parameters
+        encoder: Optional function to process each chunk of the stream
+    """
+
+    def decorator(func: Callable) -> Callable:
+        _warn_if_path_params_missing(path, func)
+
+        @wraps(func)
+        async def async_wrapped(self, *args, **kwargs):
+            request_params = _process_request_params(
+                func, "POST", path, False, None, self, *args, **kwargs
+            )
+            # Pass encoder to the request method
+            return await self._async_stream_request(request_params, encoder)
+
+        @wraps(func)
+        def sync_wrapped(self, *args, **kwargs):
+            request_params = _process_request_params(
+                func, "POST", path, False, None, self, *args, **kwargs
+            )
+            # Pass encoder to the request method
+            return self._stream_request(request_params, encoder)
+
+        @wraps(func)
+        def choose_wrapper(self, *args, **kwargs):
+            # Check if the client supports streaming
+            if (
+                hasattr(self, '_async_stream_request') and
+                inspect.iscoroutinefunction(
+                    getattr(self, '_async_stream_request'))
+            ):
+                return async_wrapped(self, *args, **kwargs)
+            elif hasattr(self, '_stream_request'):
+                return sync_wrapped(self, *args, **kwargs)
+            else:
+                raise NotImplementedError(
+                    "Streaming is not supported by this client")
+
+        return choose_wrapper
+
+    return decorator
+
+
 def get(
     path: str,
     agno_tool: bool = False,
