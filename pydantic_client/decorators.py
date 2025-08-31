@@ -6,8 +6,8 @@ from typing import Callable, Optional
 
 from pydantic import BaseModel
 
-from .tools.agno import register_agno_tool
 from .schema import RequestInfo
+from .tools.agno import register_agno_tool
 
 
 def _extract_path_and_query(path: str):
@@ -151,7 +151,6 @@ def stream(
 ) -> Callable:
     """
     Decorator for streaming API endpoints.
-
     Args:
         path: API endpoint path with optional path parameters
         encoder: Optional function to process each chunk of the stream
