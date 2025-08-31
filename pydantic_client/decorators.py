@@ -2,7 +2,7 @@ import inspect
 import re
 import warnings
 from functools import wraps
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 
 from pydantic import BaseModel
 
@@ -147,7 +147,7 @@ def rest(
 
 def stream(
     path: str,
-    encoder: Optional[Callable[[str], ...]] = None
+    encoder: Optional[Callable[[str], Any]] = None
 ) -> Callable:
     """
     Decorator for streaming API endpoints.
