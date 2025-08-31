@@ -2,8 +2,8 @@ import pytest
 from typing import List, Optional
 from pydantic import BaseModel
 
-from pydantic_client.sync_client import RequestsWebClient
-from pydantic_client.async_client import AiohttpWebClient, HttpxWebClient
+from pydantic_client.clients.sync_client import RequestsWebClient
+from pydantic_client.clients.async_client import AiohttpWebClient, HttpxWebClient
 from pydantic_client.decorators import get, post
 
 

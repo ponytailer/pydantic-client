@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, TypeVar, List, Type, get_origin, get_args
 
 from pydantic import BaseModel
-from .schema import RequestInfo
+from pydantic_client.schema import RequestInfo
 
 
 T = TypeVar('T', bound=BaseModel)
