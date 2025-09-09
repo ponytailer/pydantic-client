@@ -75,7 +75,7 @@ def _process_request_params(
     for param_name, param_value in params.items():
         if isinstance(param_value, BaseModel):
             if method in ["POST", "PUT", "PATCH"]:
-                body_data = param_value.model_dump()
+                body_data = param_value.model_dump(mode='json')
 
     info = {
         "method": method,
