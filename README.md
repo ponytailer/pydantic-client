@@ -17,10 +17,9 @@ supporting both synchronous and asynchronous operations.
 - 🚀 **Multiple HTTP backends**: Choose from `requests`, `aiohttp`, or `httpx`
 - ⚡ **Async/Sync support**: Work with both synchronous and asynchronous HTTP operations
 - 🎯 **Decorator-based API**: Clean, intuitive API definition with decorators
-- 📝 **OpenAPI/Swagger support**: Generate client code from OpenAPI specifications
+- 📝 **CLI tools**: Command-line interface for automatic client generation from OpenAPI/Swagger specs
 - 🛡️ **Mock API Responses**: This is useful for testing or development purposes.
 - ⚡ **Timing context manager**: Use `with client.span(prefix="myapi"):` to log timing for any API call, sync or async
-- 🔧 **convert api to llm tools**: API2Tools, support `agno`, others coming soon...
 - 🌟 **Nested Response Extraction**: Extract and parse deeply nested API responses using JSON path expressions
 
 ## TODO
@@ -306,6 +305,20 @@ config = {
 client = MyClient.from_config(config)
 ```
 
+### CLI Tools
+Generate a client from an OpenAPI/Swagger specification:
+
+```bash
+# Generate a requests client from a YAML file
+swagger-cli -f api.yaml -t requests -o api_client.py
+
+# Generate an aiohttp client from a JSON file
+swagger-cli -f openapi.json -t aiohttp -o async_api_client.py
+
+# Generate an httpx client with custom output name
+swagger-cli -f swagger.yaml -t httpx -o http_client.py
+```
+
 ### Timing Context Manager
 
 All clients support a span context manager for simple API call timing and logging:
@@ -322,7 +335,7 @@ with client.span(prefix="fetch_user"):
 
 ```
 
-## Configuration
+### Custom Configuration
 
 You can initialize clients with custom configurations:
 
