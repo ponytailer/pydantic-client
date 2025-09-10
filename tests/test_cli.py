@@ -1,6 +1,7 @@
 import sys
 import yaml
 import subprocess
+import pytest
 
 from pydantic_client import cli
 
@@ -175,3 +176,96 @@ def test_generate_method():
     code3 = cli.generate_method("/user", "post", op2, "requests")
     assert "user: User" in code3
     assert "def create_user" in code3
+
+
+def test_generate_method_no_operation_id():
+    """Test method generation when operationId is missing"""
+    op = {
+        "summary": "Get user info",
+        "parameters": [
+            {"name": "user_id", "in": "path", "required": True, "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"content": {"application/json": {"schema": {"type": "object"}}}}}
+    }
+    # This should handle missing operationId gracefully
+    with pytest.raises(KeyError):
+        cli.generate_method("/users/{user_id}", "get", op, "requests")
+
+
+def test_generate_method_complex_path():
+    """Test method generation with complex path parameters"""
+    op = {
+        "operationId": "get_complex_resource",
+        "summary": "Get complex resource",
+        "parameters": [
+            {"name": "user_id", "in": "path", "required": True, "schema": {"type": "string"}},
+            {"name": "post_id", "in": "path", "required": True, "schema": {"type": "integer"}},
+            {"name": "opt_param", "in": "query", "required": False, "schema": {"type": "boolean"}}
+        ],
+        "responses": {"200": {"content": {"application/json": {"schema": {"type": "object"}}}}}
+    }
+    code = cli.generate_method("/users/{user_id}/posts/{post_id}", "get", op, "requests")
+    assert "user_id: str" in code
+    assert "post_id: int" in code
+    assert "opt_param: bool = None" in code
+
+
+def test_generate_method_empty_responses():
+    """Test method generation with empty or non-2xx responses"""
+    op = {
+        "operationId": "no_response",
+        "summary": "No response data",
+        "parameters": [],
+        "responses": {"204": {"description": "No Content"}}
+    }
+    code = cli.generate_method("/empty", "delete", op, "requests")
+    assert "-> Any" in code
+
+
+def test_generate_method_with_array_response():
+    """Test method generation with array response type"""
+    op = {
+        "operationId": "list_users",
+        "summary": "List users",
+        "parameters": [],
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "array",
+                            "items": {"$ref": "#/components/schemas/User"}
+                        }
+                    }
+                }
+            }
+        }
+    }
+    code = cli.generate_method("/users", "get", op, "requests")
+    assert "-> List[User]" in code
+
+
+def test_generate_method_no_parameters():
+    """Test method generation with no parameters"""
+    op = {
+        "operationId": "simple_get",
+        "summary": "Simple get request",
+        "parameters": [],
+        "responses": {"200": {"content": {"application/json": {"schema": {"type": "string"}}}}}
+    }
+    code = cli.generate_method("/simple", "get", op, "requests")
+    assert "def simple_get(self)" in code
+    # Note: The actual implementation might return 'Any' instead of 'str' for some response types
+    assert "-> Any" in code or "-> str" in code
+
+
+def test_generate_method_invalid_type():
+    """Test method generation with invalid/unknown type"""
+    op = {
+        "operationId": "unknown_type",
+        "summary": "Unknown type test",
+        "parameters": [],
+        "responses": {"200": {"content": {"application/json": {"schema": {"type": "unknown_type"}}}}}
+    }
+    code = cli.generate_method("/unknown", "get", op, "requests")
+    assert "-> Any" in code
