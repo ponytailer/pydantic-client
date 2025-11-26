@@ -2,7 +2,8 @@ import pytest
 import requests_mock
 from typing import Optional
 from pydantic import BaseModel
-from pydantic_client import get, post, RequestsWebClient, AiohttpWebClient
+from pydantic_client import get, post, RequestsWebClient
+from pydantic_client.async_client import AiohttpWebClient
 
 
 class User(BaseModel):
