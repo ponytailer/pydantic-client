@@ -1,7 +1,8 @@
 import pytest
 from typing import Optional
 from pydantic import BaseModel
-from pydantic_client import post, AiohttpWebClient
+from pydantic_client import post
+from pydantic_client.async_client import AiohttpWebClient
 
 
 class User(BaseModel):
