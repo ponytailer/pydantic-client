@@ -36,7 +36,7 @@ class RequestsWebClient(BaseWebClient):
 
         request_params = self.before_request(request_params)
 
-        response = requests.request(**request_params, timeout=self.timeout)
+        response = self.session.request(**request_params, timeout=self.timeout)
         response.raise_for_status()
         
         if response_model is str:
