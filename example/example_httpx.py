@@ -3,7 +3,8 @@ Example: Async API client with HttpxWebClient and Agno tools
 """
 import asyncio
 from pydantic import BaseModel
-from pydantic_client import HttpxWebClient, get, post
+from pydantic_client import get, post
+from pydantic_client.async_client import HttpxWebClient
 
 class Product(BaseModel):
     id: int

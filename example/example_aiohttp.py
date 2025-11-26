@@ -3,7 +3,8 @@ Example: Async API client with AiohttpWebClient and Agno tools
 """
 import asyncio
 from pydantic import BaseModel
-from pydantic_client import AiohttpWebClient, get, post
+from pydantic_client import get, post
+from pydantic_client.async_client import AiohttpWebClient
 
 class Order(BaseModel):
     id: int
