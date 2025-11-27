@@ -2,7 +2,7 @@ import inspect
 import re
 import warnings
 from functools import wraps
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 
 from pydantic import BaseModel
 
@@ -47,7 +47,7 @@ def _warn_if_path_params_missing(path: str, func: Callable):
 def _process_request_params(
     func: Callable, method: str, path: str, form_body: bool,
     response_extract_path: Optional[str] = None,
-    response_type_handler: Optional[Callable[[RequestInfo], ...]] = None,
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None,
     *args, **kwargs
 ) -> RequestInfo:
     sig = inspect.signature(func)
@@ -112,7 +112,7 @@ def rest(
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
     response_extract_path: Optional[str] = None,
-    response_type_handler: Optional[Callable[[RequestInfo], ...]] = None
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     def decorator(path: str) -> Callable:
         def wrapper(func: Callable) -> Callable:
@@ -156,8 +156,7 @@ def get(
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
     response_extract_path: Optional[str] = None,
-    response_type_handler: Optional[Callable[[RequestInfo], ...]] = None
-
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     return rest(
         "GET",
@@ -173,8 +172,7 @@ def delete(
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
     response_extract_path: Optional[str] = None,
-    response_type_handler: Optional[Callable[[RequestInfo], ...]] = None
-
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     return rest(
         "DELETE",
@@ -191,8 +189,7 @@ def post(
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
     response_extract_path: Optional[str] = None,
-    response_type_handler: Optional[Callable[[RequestInfo], ...]] = None
-
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     return rest(
         "POST",
@@ -210,8 +207,7 @@ def put(
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
     response_extract_path: Optional[str] = None,
-    response_type_handler: Optional[Callable[[RequestInfo], ...]] = None
-
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     return rest(
         "PUT",
@@ -229,7 +225,7 @@ def patch(
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
     response_extract_path: Optional[str] = None,
-    response_type_handler: Optional[Callable[[RequestInfo], ...]] = None
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     return rest(
         "PATCH",
