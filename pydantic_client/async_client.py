@@ -37,6 +37,8 @@ class AiohttpWebClient(BaseWebClient):
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
         extract_path = request_params.pop("response_extract_path", None)  # Get response extraction path parameter
+        response_type_handler = request_params.pop(
+            "response_type_handler", None)
 
         request_params = self.before_request(request_params)
 
@@ -45,6 +47,12 @@ class AiohttpWebClient(BaseWebClient):
 
         async with self.session.request(**request_params) as response:
             response.raise_for_status()
+
+            if (
+                response_type_handler is not None and
+                callable(response_type_handler)
+            ):
+                response_model = response_type_handler(request_info)
 
             if response_model is str:
                 return await response.text()
@@ -89,12 +97,19 @@ class HttpxWebClient(BaseWebClient):
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
         extract_path = request_params.pop("response_extract_path", None)  # Get response extraction path parameter
+        response_type_handler = request_params.pop(
+            "response_type_handler", None)
 
         request_params = self.before_request(request_params)
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.request(**request_params)
             response.raise_for_status()
+            if (
+                response_type_handler is not None and
+                callable(response_type_handler)
+            ):
+                response_model = response_type_handler(request_info)
 
             if response_model is str:
                 return response.text

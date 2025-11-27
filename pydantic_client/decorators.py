@@ -2,12 +2,13 @@ import inspect
 import re
 import warnings
 from functools import wraps
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 
 from pydantic import BaseModel
 
-from .tools.agno import register_agno_tool
 from .schema import RequestInfo
+from .tools.agno import register_agno_tool
+
 
 def _extract_path_and_query(path: str):
     """
@@ -29,6 +30,7 @@ def _extract_path_and_query(path: str):
     else:
         return path, []
 
+
 def _warn_if_path_params_missing(path: str, func: Callable):
     """Check if all {var} in path appear in func parameters during registration"""
     sig = inspect.signature(func)
@@ -41,8 +43,12 @@ def _warn_if_path_params_missing(path: str, func: Callable):
             f"Function '{func.__name__}' missing parameters {missing} required by path '{path}'"
         )
 
+
 def _process_request_params(
-    func: Callable, method: str, path: str, form_body: bool, response_extract_path: Optional[str] = None, *args, **kwargs
+    func: Callable, method: str, path: str, form_body: bool,
+    response_extract_path: Optional[str] = None,
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None,
+    *args, **kwargs
 ) -> RequestInfo:
     sig = inspect.signature(func)
     bound_args = sig.bind(*args, **kwargs)
@@ -50,8 +56,7 @@ def _process_request_params(
     params = dict(bound_args.arguments)
     params.pop("self", None)
     request_headers = params.pop("request_headers", None)
-    
- 
+
     return_type = sig.return_annotation
     if isinstance(return_type, type) and issubclass(return_type, BaseModel):
         response_model = return_type
@@ -62,7 +67,8 @@ def _process_request_params(
     raw_path, query_tpls = _extract_path_and_query(path)
 
     formatted_path = raw_path.format(**{
-        k: params[k] for k in re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path)
+        k: params[k] for k in
+        re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path)
     })
 
     query_params = {}
@@ -70,7 +76,7 @@ def _process_request_params(
         v = params.pop(v_name, None)
         if v is not None:
             query_params[k] = v
-    
+
     body_data = None
     for param_name, param_value in params.items():
         if isinstance(param_value, BaseModel):
@@ -94,16 +100,19 @@ def _process_request_params(
         "headers": request_headers,
         "response_model": response_model,
         "function_name": func.__name__,
-        "response_extract_path": response_extract_path
+        "response_extract_path": response_extract_path,
+        "response_type_handler": response_type_handler
     }
     return RequestInfo.model_validate(info)
 
+
 def rest(
-    method: str, 
+    method: str,
     form_body: bool = False,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     def decorator(path: str) -> Callable:
         def wrapper(func: Callable) -> Callable:
@@ -114,14 +123,18 @@ def rest(
             @wraps(func)
             async def async_wrapped(self, *args, **kwargs):
                 request_params = _process_request_params(
-                    func, method, path, form_body, response_extract_path, self, *args, **kwargs
+                    func, method, path, form_body, response_extract_path,
+                    response_type_handler, self,
+                    *args, **kwargs
                 )
                 return await self._request(request_params)
 
             @wraps(func)
             def sync_wrapped(self, *args, **kwargs):
                 request_params = _process_request_params(
-                    func, method, path, form_body, response_extract_path, self, *args, **kwargs
+                    func, method, path, form_body, response_extract_path,
+                    response_type_handler, self,
+                    *args, **kwargs
                 )
                 return self._request(request_params)
 
@@ -142,13 +155,15 @@ def get(
     path: str,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     return rest(
-        "GET", 
-        agno_tool=agno_tool, 
+        "GET",
+        agno_tool=agno_tool,
         tool_description=tool_description,
-        response_extract_path=response_extract_path
+        response_extract_path=response_extract_path,
+        response_type_handler=response_type_handler
     )(path)
 
 
@@ -156,13 +171,15 @@ def delete(
     path: str,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     return rest(
-        "DELETE", 
-        agno_tool=agno_tool, 
+        "DELETE",
+        agno_tool=agno_tool,
         tool_description=tool_description,
-        response_extract_path=response_extract_path
+        response_extract_path=response_extract_path,
+        response_type_handler=response_type_handler
     )(path)
 
 
@@ -171,14 +188,16 @@ def post(
     form_body: bool = False,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     return rest(
-        "POST", 
+        "POST",
         form_body=form_body,
-        agno_tool=agno_tool, 
+        agno_tool=agno_tool,
         tool_description=tool_description,
-        response_extract_path=response_extract_path
+        response_extract_path=response_extract_path,
+        response_type_handler=response_type_handler
     )(path)
 
 
@@ -187,14 +206,16 @@ def put(
     form_body: bool = False,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     return rest(
-        "PUT", 
+        "PUT",
         form_body=form_body,
-        agno_tool=agno_tool, 
+        agno_tool=agno_tool,
         tool_description=tool_description,
-        response_extract_path=response_extract_path
+        response_extract_path=response_extract_path,
+        response_type_handler=response_type_handler
     )(path)
 
 
@@ -203,12 +224,14 @@ def patch(
     form_body: bool = False,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    response_type_handler: Optional[Callable[[RequestInfo], Any]] = None
 ) -> Callable:
     return rest(
-        "PATCH", 
+        "PATCH",
         form_body=form_body,
-        agno_tool=agno_tool, 
+        agno_tool=agno_tool,
         tool_description=tool_description,
-        response_extract_path=response_extract_path
+        response_extract_path=response_extract_path,
+        response_type_handler=response_type_handler
     )(path)
