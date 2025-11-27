@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, TypeVar
+from typing import Any, Dict, Optional, TypeVar, Union, get_origin, get_args
 import logging
 
 import requests
@@ -38,7 +38,7 @@ class RequestsWebClient(BaseWebClient):
 
         response = self.session.request(**request_params, timeout=self.timeout)
         response.raise_for_status()
-        
+
         if response_model is str:
             return response.text
         elif response_model is bytes:
@@ -48,6 +48,15 @@ class RequestsWebClient(BaseWebClient):
             return self._extract_nested_data(response.json(), extract_path, response_model)
         elif not response_model or response_model is dict or getattr(response_model, '__module__', None) == 'inspect':
             return response.json()
+        elif get_origin(response_model) is Union:
+            json_data = response.json()
+            for model_type in get_args(response_model):
+                if hasattr(model_type, 'model_validate'):
+                    try:
+                        return model_type.model_validate(json_data, from_attributes=True)
+                    except Exception:
+                        continue
+            raise ValueError(f"Unable to validate response with any of the union types: {response_model}")
         elif hasattr(response_model, 'model_validate'):
             return response_model.model_validate(response.json(), from_attributes=True)
         else:
