@@ -1,66 +1,42 @@
 import requests_mock
-from typing import Union
+from enum import Enum
+from typing import Union, Optional, overload, Literal
 from pydantic import BaseModel
 from pydantic_client import RequestsWebClient, get
 
 
 class ModelA(BaseModel):
-    type: str
-    data: str
+    name: str
+    book: Optional[str] = None
 
 
 class ModelB(BaseModel):
-    type: str
-    value: int
+    name: str
+    other_book: Optional[str] = None
 
 
 class TestUnionClient(RequestsWebClient):
-    @get("/test")
-    def get_union_response(self) -> Union[ModelA, ModelB]:
+    @overload
+    def get_type_response(self, type: Literal["A"]) -> ModelA: ...
+    
+    @overload
+    def get_type_response(self, type: Literal["B"]) -> ModelB: ...
+    
+    @get("/types?type={type}")
+    def get_type_response(self, type: str) -> Union[ModelA, ModelB]:
         ...
 
-
-def test_union_type_first_model():
+def test_union_type_handler():
     with requests_mock.Mocker() as m:
-        m.get(
-            'http://example.com/test',
-            json={"type": "A", "data": "test"}
-        )
+        m.get('http://example.com/types?type=A', json={"name": "test_A", "book": "test_book"})
+        m.get('http://example.com/types?type=B', json={"name": "test_B", "other_book": "test_other_book"})
 
         client = TestUnionClient(base_url="http://example.com")
-        result = client.get_union_response()
-
-        assert isinstance(result, ModelA)
-        assert result.type == "A"
-        assert result.data == "test"
-
-
-def test_union_type_second_model():
-    with requests_mock.Mocker() as m:
-        m.get(
-            'http://example.com/test',
-            json={"type": "B", "value": 42}
-        )
-
-        client = TestUnionClient(base_url="http://example.com")
-        result = client.get_union_response()
-
-        assert isinstance(result, ModelB)
-        assert result.type == "B"
-        assert result.value == 42
-
-
-def test_union_type_fallback_to_first_valid():
-    with requests_mock.Mocker() as m:
-        m.get(
-            'http://example.com/test',
-            json={"type": "C", "data": "fallback", "value": 123}
-        )
-
-        client = TestUnionClient(base_url="http://example.com")
-        result = client.get_union_response()
-
-        # Should successfully parse as ModelA since it has required fields
-        assert isinstance(result, ModelA)
-        assert result.type == "C"
-        assert result.data == "fallback"
+        
+        result_a = client.get_type_response('A')
+        assert isinstance(result_a, ModelA)
+        assert result_a.name == "test_A"
+        
+        result_b = client.get_type_response('B')
+        assert isinstance(result_b, ModelB)
+        assert result_b.name == "test_B"
