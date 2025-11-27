@@ -64,6 +64,12 @@ class CreateUser(BaseModel):
     name: str
     email: str
 
+    
+def user_type_handler(request: RequestInfo):
+    match request.params["type"]:
+        case "A": return User
+        case "B": return User2
+
 
 # Create your API client
 class MyAPIClient(RequestsWebClient):
@@ -98,6 +104,10 @@ class MyAPIClient(RequestsWebClient):
     )
     def delete_user(self, user_id: str, request_headers: Dict[str, Any]):
         ...
+    
+    @get("/users?type={type}", response_type_handler=user_type_handler)
+    def get_user_type(self, type: str) -> Union[User, User2]:
+        ...
 
 
 # Use the client
@@ -106,6 +116,12 @@ user = client.get_user(user_id=123)
 
 user_body = CreateUser(name="john", email="123@gmail.com")
 user = client.create_user(user_body)
+
+# user_1 is User
+user_1 = client.get_user_type("A")
+# user_2 is User2
+user_2 = client.get_user_type("B")
+
 
 # will update the client headers.
 client.delete_user("123", {"ba": "your"})
