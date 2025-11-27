@@ -28,8 +28,8 @@ class TestUnionClient(RequestsWebClient):
 
 def test_union_type_handler():
     with requests_mock.Mocker() as m:
-        m.get('http://example.com/types?type=A', json={"name": "test_A", "book": "test_book"})
-        m.get('http://example.com/types?type=B', json={"name": "test_B", "other_book": "test_other_book"})
+        m.get('http://example.com/types?type=A', json={"name": "test_A" })
+        m.get('http://example.com/types?type=B', json={"name": "test_B" })
 
         client = TestUnionClient(base_url="http://example.com")
         
