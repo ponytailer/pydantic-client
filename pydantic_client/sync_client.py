@@ -1,5 +1,5 @@
-from typing import Any, Dict, Optional, TypeVar
 import logging
+from typing import Any, Dict, Optional, TypeVar
 
 import requests
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ class RequestsWebClient(BaseWebClient):
         self,
         base_url: str,
         headers: Optional[Dict[str, Any]] = None,
-        timeout: Optional[int] =30,
+        timeout: Optional[int] = 30,
         session: Optional[requests.Session] = None,
         statsd_address: Optional[str] = None
     ):
@@ -33,24 +33,33 @@ class RequestsWebClient(BaseWebClient):
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
         extract_path = request_params.pop("response_extract_path", None)
+        response_type_handler = request_params.pop(
+            "response_type_handler", None)
 
         request_params = self.before_request(request_params)
 
         response = self.session.request(**request_params, timeout=self.timeout)
         response.raise_for_status()
-        
+
+        if (
+            response_type_handler is not None and
+            callable(response_type_handler)
+        ):
+            response_model = response_type_handler(request_info)
+
         if response_model is str:
             return response.text
         elif response_model is bytes:
             return response.content
         elif extract_path:
             # Process nested path extraction
-            return self._extract_nested_data(response.json(), extract_path, response_model)
-        elif not response_model or response_model is dict or getattr(response_model, '__module__', None) == 'inspect':
+            return self._extract_nested_data(response.json(), extract_path,
+                                             response_model)
+        elif not response_model or response_model is dict or getattr(
+            response_model, '__module__', None) == 'inspect':
             return response.json()
         elif hasattr(response_model, 'model_validate'):
-            return response_model.model_validate(response.json(), from_attributes=True)
+            return response_model.model_validate(response.json(),
+                                                 from_attributes=True)
         else:
             return response.json()
-        
-
