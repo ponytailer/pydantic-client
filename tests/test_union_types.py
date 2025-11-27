@@ -6,16 +6,12 @@ from pydantic_client import RequestsWebClient, get
 
 
 class ModelA(BaseModel):
-    name: str
-    book: Optional[str] = None
-
+    test_A: str
 
 class ModelB(BaseModel):
-    name: str
-    other_book: Optional[str] = None
+    test_B: str
 
-
-class TestUnionClient(RequestsWebClient):
+class UnionClient(RequestsWebClient):
     @overload
     def get_type_response(self, type: Literal["A"]) -> ModelA: ...
     
@@ -28,15 +24,15 @@ class TestUnionClient(RequestsWebClient):
 
 def test_union_type_handler():
     with requests_mock.Mocker() as m:
-        m.get('http://example.com/types?type=A', json={"name": "test_A" })
-        m.get('http://example.com/types?type=B', json={"name": "test_B" })
+        m.get('http://example.com/types?type=A', json={"test_A": "name_A"})
+        m.get('http://example.com/types?type=B', json={"test_B": "name_B"})
 
-        client = TestUnionClient(base_url="http://example.com")
+        client = UnionClient(base_url="http://example.com")
         
         result_a = client.get_type_response('A')
         assert isinstance(result_a, ModelA)
-        assert result_a.name == "test_A"
+        assert result_a.test_A == "name_A"
         
         result_b = client.get_type_response('B')
         assert isinstance(result_b, ModelB)
-        assert result_b.name == "test_B"
+        assert result_b.test_B == "name_B"
