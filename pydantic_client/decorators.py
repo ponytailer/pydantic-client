@@ -18,16 +18,21 @@ def _extract_path_and_query(path: str):
     if '?' in path:
         path_template, query = path.split('?', 1)
         query_tpls = []
+        static_qs = []
         for pair in query.split('&'):
             if '=' in pair:
                 k, v = pair.split('=', 1)
                 m = re.fullmatch(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}", v)
                 if m:
+                    # add dynamic qs
                     query_tpls.append((k, m.group(1)))
+                else:
+                    # add static qs
+                    static_qs.append((k, v))
 
-        return path_template, query_tpls
+        return path_template, query_tpls, static_qs
     else:
-        return path, []
+        return path, [], []
 
 def _warn_if_path_params_missing(path: str, func: Callable):
     """Check if all {var} in path appear in func parameters during registration"""
@@ -59,13 +64,18 @@ def _process_request_params(
         response_model = return_type
     else:
         response_model = return_type
-    raw_path, query_tpls = _extract_path_and_query(path)
+    raw_path, query_tpls, static_qs = _extract_path_and_query(path)
 
     formatted_path = raw_path.format(**{
         k: params[k] for k in re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path)
     })
 
     query_params = {}
+    # fill static qs
+    for k, v in static_qs:
+        query_params[k] = v
+
+    # fill dynamic qs with overwrite
     for k, v_name in query_tpls:
         v = params.pop(v_name, None)
         if v is not None:
