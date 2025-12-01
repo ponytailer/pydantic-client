@@ -33,6 +33,7 @@ class SpanContext:
         if self.client._statsd_client:
             self.client._statsd_client.timing(f"{self.prefix}.elapsed", int(elapsed))
 
+class PydanticClientValidationError(ValueError): ...
 
 class BaseWebClient(ABC):
     def __init__(
@@ -159,13 +160,21 @@ class BaseWebClient(ABC):
         mosk_data = self._mock_config[name]
 
         mosk_data_bytes: bytes | None = None
+
         if isinstance(mosk_data, list) or isinstance(mosk_data, dict):
             mosk_data_bytes = json.dumps(mosk_data).encode()
 
         if isinstance(mosk_data, pydantic.BaseModel):
             mosk_data_bytes = mosk_data.model_dump_json().encode()
 
-        assert mosk_data_bytes is not None, f'Unknown mosk output type: {type(mosk_data)}'
+        if isinstance(mosk_data, str):
+            mosk_data_bytes = mosk_data.encode()
+
+        if isinstance(mosk_data, bytes):
+            mosk_data_bytes = mosk_data
+
+        if mosk_data is not None:
+            assert mosk_data_bytes is not None, f'Unknown mosk output type: {type(mosk_data)}'
         return self._cast_response_to_response_model(mosk_data_bytes, request_info)
         
     @abstractmethod
@@ -174,25 +183,21 @@ class BaseWebClient(ABC):
 
     def _cast_response_to_response_model(self, response: bytes, request_info: RequestInfo):
         response_model = request_info.response_model
-        if response_model is None: return response
+        if response_model is None or response is None: return response
 
-        # handle generic types dict[...], list[...]
-        # using get_origin for get real response_model class
-        response_model_origin = response_model
-        if not inspect.isclass(response_model):
-            response_model_origin = response_model
-            response_model = get_origin(response_model)
-
-        if issubclass(response_model, bytes):
+        if response_model is bytes:
             return response
 
         response_str = response.decode()
 
-        if issubclass(response_model, str):
+        if response_model is str:
             return response_str
 
         if request_info.response_extract_path:
-            response_json: dict | list | None = self._extract_nested_data(json.loads(response_str), request_info.response_extract_path)
+            response_json: dict | list | None = self._extract_nested_data(
+                json.loads(response_str),
+                request_info.response_extract_path
+            )
 
             # extraction fail
             if response_json is None:
@@ -200,6 +205,13 @@ class BaseWebClient(ABC):
         else:
             # allow using model_validate_json instead of json.loads() for speed up pydantic models
             response_json: dict | list | None = None
+
+        # handle generic types dict[...], list[...]
+        # using get_origin for get real response_model class
+        response_model_origin = response_model
+        if not inspect.isclass(response_model):
+            response_model_origin = response_model
+            response_model = get_origin(response_model)
 
         # handle type hint: TestModel
         if issubclass(response_model, pydantic.BaseModel):

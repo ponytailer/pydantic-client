@@ -55,15 +55,11 @@ def _process_request_params(
     params = dict(bound_args.arguments)
     params.pop("self", None)
     request_headers = params.pop("request_headers", None)
-    
- 
-    return_type = sig.return_annotation
-    if isinstance(return_type, type) and issubclass(return_type, BaseModel):
-        response_model = return_type
-    elif return_type in [str, bytes]:
-        response_model = return_type
-    else:
-        response_model = return_type
+
+    response_model = sig.return_annotation
+    if isinstance(response_model, str):
+        response_model = eval(response_model)
+
     raw_path, query_tpls, static_qs = _extract_path_and_query(path)
 
     formatted_path = raw_path.format(**{
