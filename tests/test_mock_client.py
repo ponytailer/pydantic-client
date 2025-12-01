@@ -30,6 +30,11 @@ class TestClient(RequestsWebClient):
     def get_user(self, user_id: int) -> User:
         """Get a single user"""
         pass
+
+    @get("/users/{user_id}")
+    def get_user_as_model(self, user_id: int) -> User:
+        """Get a single user"""
+        pass
     
     @post("/users")
     def create_user(self, user: User) -> User:
@@ -73,6 +78,14 @@ def test_sync_client_mock():
                 "age": 30,
                 "email": "test1@example.com"
             }
+        },
+        {
+            "name": "get_user_as_model",
+            "output": User.model_validate({
+                "name": "test3",
+                "age": 20,
+                "email": "test3@example.com"
+            }).model_dump(mode='json')
         }
     ]
     
@@ -91,6 +104,12 @@ def test_sync_client_mock():
     assert user.name == "test1"
     assert user.age == 30
     assert user.email == "test1@example.com"
+
+    user = client.get_user_as_model(1)
+    assert isinstance(user, User)
+    assert user.name == "test3"
+    assert user.age == 20
+    assert user.email == "test3@example.com"
 
 
 def test_from_config_with_mock():

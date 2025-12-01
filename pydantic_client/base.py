@@ -234,8 +234,8 @@ class BaseWebClient(ABC):
                 nested_type = nested_types[0]
 
                 # if hint is: list[dict[...]] - unsupported
-                if not inspect.isclass(nested_type):
-                    raise ValueError(f"Incorrect type hint on return value on API {request_info.path}, simplify")
+                if not inspect.isclass(nested_type) or len(get_args(nested_type)) > 0:
+                    raise PydanticClientValidationError(f"Incorrect type hint on return value on API {request_info.path}, simplify")
 
                 # handle list[TestModel]
                 if issubclass(nested_type, pydantic.BaseModel):

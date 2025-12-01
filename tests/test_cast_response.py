@@ -1,9 +1,10 @@
 from json import JSONDecodeError
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import BaseModel, ValidationError
 
 from pydantic_client import RequestsWebClient, get
+from pydantic_client.base import PydanticClientValidationError
 
 
 class User(BaseModel):
@@ -18,6 +19,10 @@ class TestClient(RequestsWebClient):
 
     @get("/just_string_neg")
     def just_string_neg(self) -> str:
+        ...
+
+    @get("/too_complex_return_type")
+    def too_complex_return_type(self) -> list[dict[str, Any]]:
         ...
 
     @get("/just_bytes")
@@ -145,5 +150,26 @@ def test_generic_types():
         client.get_users_decorator_list_neg()
         assert False, 'must be pydantic model validation error'
     except ValidationError:
+        pass
+
+def test_incorrect_return_type():
+    client = TestClient(base_url="https://example.com")
+
+    mock_data = [
+        {
+            "name": "too_complex_return_type",
+            "output": [
+                {"name": "test1", "age": 30, "email": "test1@example.com"},
+                {"name": "test2", "age": 25, "email": "test2@example.com"}
+            ]
+        },
+    ]
+
+    client.set_mock_config(mock_config=mock_data)
+
+    try:
+        client.too_complex_return_type()
+        assert False, 'must be raises exception PydanticClientValidationError'
+    except PydanticClientValidationError as e:
         pass
 
