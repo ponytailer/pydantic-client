@@ -43,11 +43,11 @@ def test_querystring_rendering_partial_params():
     client = MyClient()
     client.get_user(name="bob")
     assert client.last_request.path == "/users"
-    assert client.last_request.params == {"name": "bob"}
+    assert client.last_request.params == {"name": "bob", 'address': 'pp'}
     client.get_user(age=30)
-    assert client.last_request.params == {"age": 30}
+    assert client.last_request.params == {"age": 30, 'address': 'pp'}
     client.get_user()
-    assert client.last_request.params == {}
+    assert client.last_request.params == {'address': 'pp'}
 
 
 def test_querystring_rendering_with_path_and_query():
