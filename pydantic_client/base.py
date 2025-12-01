@@ -1,16 +1,16 @@
 import inspect
 import json
 import logging
-import time
-import statsd
 import re
-
+import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, TypeVar, List, Type, get_origin, get_args
+from typing import Any, Dict, Optional, TypeVar, List, get_origin, get_args
 
+import pydantic
+import statsd
 from pydantic import BaseModel
-from .schema import RequestInfo
 
+from .schema import RequestInfo
 
 T = TypeVar('T', bound=BaseModel)
 logger = logging.getLogger(__name__)
@@ -155,26 +155,88 @@ class BaseWebClient(ABC):
         if name not in self._mock_config:
             logger.warning(f"No mock found for method: {name}")
             return None
-            
-        mock_response = self._mock_config[name]
-        response_model = request_info.response_model
 
+        mosk_data = self._mock_config[name]
 
-        extract_path = request_info.response_extract_path
+        mosk_data_bytes: bytes | None = None
+        if isinstance(mosk_data, list) or isinstance(mosk_data, dict):
+            mosk_data_bytes = json.dumps(mosk_data).encode()
 
-        if extract_path:
-            return self._extract_nested_data(mock_response, extract_path, response_model)
-        elif response_model and not isinstance(response_model, type) or response_model in (str, bytes):
-            return mock_response
-        elif response_model:
-            return response_model.model_validate(mock_response, from_attributes=True)
-        return mock_response
+        if isinstance(mosk_data, pydantic.BaseModel):
+            mosk_data_bytes = mosk_data.model_dump_json().encode()
+
+        assert mosk_data_bytes is not None, f'Unknown mosk output type: {type(mosk_data)}'
+        return self._cast_response_to_response_model(mosk_data_bytes, request_info)
         
     @abstractmethod
     def _request(self, request_info: RequestInfo) -> Any:
         ...
+
+    def _cast_response_to_response_model(self, response: bytes, request_info: RequestInfo):
+        response_model = request_info.response_model
+        if response_model is None: return response
+
+        # handle generic types dict[...], list[...]
+        # using get_origin for get real response_model class
+        response_model_origin = response_model
+        if not inspect.isclass(response_model):
+            response_model_origin = response_model
+            response_model = get_origin(response_model)
+
+        if issubclass(response_model, bytes):
+            return response
+
+        response_str = response.decode()
+
+        if issubclass(response_model, str):
+            return response_str
+
+        if request_info.response_extract_path:
+            response_json: dict | list | None = self._extract_nested_data(json.loads(response_str), request_info.response_extract_path)
+
+            # extraction fail
+            if response_json is None:
+                return None
+        else:
+            # allow using model_validate_json instead of json.loads() for speed up pydantic models
+            response_json: dict | list | None = None
+
+        # handle type hint: TestModel
+        if issubclass(response_model, pydantic.BaseModel):
+            if response_json is None:
+                return response_model.model_validate_json(response_str, by_alias=True)
+            else:
+                return response_model.model_validate(response_json, by_alias=True)
+
+        if response_json is None:
+            response_json: dict | list = json.loads(response_str)
+
+        if issubclass(response_model, dict):
+            return response_json
+
+        # handle type hint: list[...] or just list
+        if issubclass(response_model, list):
+
+            # handle type hint: list[...]
+            nested_types = get_args(response_model_origin)
+            if len(nested_types) > 0:
+                nested_type = nested_types[0]
+
+                # if hint is: list[dict[...]] - unsupported
+                if not inspect.isclass(nested_type):
+                    raise ValueError(f"Incorrect type hint on return value on API {request_info.path}, simplify")
+
+                # handle list[TestModel]
+                if issubclass(nested_type, pydantic.BaseModel):
+                    return [nested_type.model_validate(item, by_alias=True) for item in response_json]
+
+            return response_json
+
+        logger.warning(f"Unknown response_model {response_model} on API {request_info.path} or "
+                       f"incorrect response type {type(response_json)}, returned {type(response_json)}")
+        return response_json
         
-    def _extract_nested_data(self, data: Dict[str, Any], path: str, model_type: Type) -> Any:
+    def _extract_nested_data(self, data: Dict[str, Any], path: str) -> Any:
         """
         Extract and parse data from nested response data
         
@@ -205,17 +267,7 @@ class BaseWebClient(ABC):
                     return None
             else:
                 return None
-        
-        if current is not None:
-            # Handle list types
-            origin = get_origin(model_type)
-            
-            if origin is list or origin is List:
-                item_type = get_args(model_type)[0]
-                if isinstance(current, list):
-                    return [item_type.model_validate(item) for item in current]
-            elif hasattr(model_type, 'model_validate'):
-                return model_type.model_validate(current)
+
         return current
 
     def register_agno_tools(self, agent):
