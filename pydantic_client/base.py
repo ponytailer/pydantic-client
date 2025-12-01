@@ -227,8 +227,7 @@ class BaseWebClient(ABC):
             return response_json
 
         # handle type hint: list[...] or just list
-        if issubclass(response_model, list):
-
+        if issubclass(response_model, list) or get_origin(response_model) is list:
             # handle type hint: list[...]
             nested_types = get_args(response_model_origin)
             if len(nested_types) > 0:
