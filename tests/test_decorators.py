@@ -65,7 +65,7 @@ def test_query_params():
         client.list_users(page=2, per_page=20)
 
         assert m.called
-        assert m.last_request.qs == {'page': ['2'], 'per_page': ['20']}
+        assert m.last_request.qs == {'page': ['2'], 'per_page': ['20'], 'name': ['kk']}
 
 
 @pytest.mark.asyncio
