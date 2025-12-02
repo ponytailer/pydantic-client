@@ -2,10 +2,11 @@ import inspect
 import re
 import warnings
 from functools import wraps
-from typing import Callable, Optional
+from typing import Callable, Optional, Literal
 
 from pydantic import BaseModel
 
+from .base import PydanticClientValidationError
 from .tools.agno import register_agno_tool
 from .schema import RequestInfo
 
@@ -47,7 +48,8 @@ def _warn_if_path_params_missing(path: str, func: Callable):
         )
 
 def _process_request_params(
-    func: Callable, method: str, path: str, form_body: bool, response_extract_path: Optional[str] = None, *args, **kwargs
+    func: Callable, method: str, path: str, form_body: bool, response_extract_path: Optional[str] = None,
+    unknown_args_behavior: Literal['query', 'body', 'not_allow'] = 'body', *args, **kwargs
 ) -> RequestInfo:
     sig = inspect.signature(func)
     bound_args = sig.bind(*args, **kwargs)
@@ -62,9 +64,12 @@ def _process_request_params(
 
     raw_path, query_tpls, static_qs = _extract_path_and_query(path)
 
-    formatted_path = raw_path.format(**{
-        k: params[k] for k in re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path)
-    })
+    used_in_path_params = []
+    format_path_data = {}
+    for k in re.findall(r'{([a-zA-Z_][a-zA-Z0-9_]*)}', raw_path):
+        format_path_data[k] = params[k]
+        used_in_path_params.append(k)
+    formatted_path = raw_path.format(**format_path_data)
 
     query_params = {}
     # fill static qs
@@ -76,17 +81,49 @@ def _process_request_params(
         v = params.pop(v_name, None)
         if v is not None:
             query_params[k] = v
-    
+
+    # if param used in path, but not used in query_string
+    # need for support overlap test with path `/{keyword}?kw={keyword}`
+    # and correct unknown_args_behavior=not_allow
+    for k in used_in_path_params:
+        if k in params:
+            del params[k]
+
     body_data = None
-    for param_name, param_value in params.items():
+    for param_name, param_value in params.copy().items():
         if isinstance(param_value, BaseModel):
+            # rewrite body_data twice (or more) not allowed
+            if body_data is not None:
+                raise PydanticClientValidationError(f'Cannot put multiple data objects in request')
+
             if method in ["POST", "PUT", "PATCH"]:
-                body_data = param_value.model_dump(mode='json')
+                # pydantic.Field(serialization_alias=...) works only with by_alias=True
+                body_data = param_value.model_dump(mode='json', by_alias=True)
+
+                # removing used params from variable
+                del params[param_name]
+            else:
+                raise PydanticClientValidationError(f'Cannot put body data in {method} request')
+
+    if params:
+        # raise if params have non-used variables (probably error in path {var1} with arg another name)
+        # example: path = '/?qs_dynamic={qs_11111}' with arg name 'qs_dynamic'
+        # aka strict mode
+        if unknown_args_behavior == 'not_allow':
+            raise PydanticClientValidationError('Some arguments is not filled, verify path and func argument names')
+
+        if unknown_args_behavior == 'query':
+            query_params.update(params)
+
+        if unknown_args_behavior == 'body':
+            if body_data is not None:
+                raise PydanticClientValidationError(f'Cannot fill body because is not empty')
+            body_data = params
 
     info = {
         "method": method,
         "path": formatted_path,
-        "params": query_params if method in ["GET", "DELETE"] else None,
+        "params": query_params, # all request methods can have query_params
         "json": (
             body_data
             if not form_body and method in ["POST", "PUT", "PATCH"]
@@ -109,7 +146,8 @@ def rest(
     form_body: bool = False,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    unknown_args_behavior: Literal['query', 'body', 'not_allow'] = 'body'
 ) -> Callable:
     def decorator(path: str) -> Callable:
         def wrapper(func: Callable) -> Callable:
@@ -120,14 +158,14 @@ def rest(
             @wraps(func)
             async def async_wrapped(self, *args, **kwargs):
                 request_params = _process_request_params(
-                    func, method, path, form_body, response_extract_path, self, *args, **kwargs
+                    func, method, path, form_body, response_extract_path, unknown_args_behavior, self, *args, **kwargs
                 )
                 return await self._request(request_params)
 
             @wraps(func)
             def sync_wrapped(self, *args, **kwargs):
                 request_params = _process_request_params(
-                    func, method, path, form_body, response_extract_path, self, *args, **kwargs
+                    func, method, path, form_body, response_extract_path, unknown_args_behavior, self, *args, **kwargs
                 )
                 return self._request(request_params)
 
@@ -148,13 +186,15 @@ def get(
     path: str,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    unknown_args_behavior: Literal['query', 'body', 'not_allow'] = 'body'
 ) -> Callable:
     return rest(
         "GET", 
         agno_tool=agno_tool, 
         tool_description=tool_description,
-        response_extract_path=response_extract_path
+        response_extract_path=response_extract_path,
+        unknown_args_behavior=unknown_args_behavior
     )(path)
 
 
@@ -162,13 +202,15 @@ def delete(
     path: str,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    unknown_args_behavior: Literal['query', 'body', 'not_allow'] = 'body'
 ) -> Callable:
     return rest(
         "DELETE", 
         agno_tool=agno_tool, 
         tool_description=tool_description,
-        response_extract_path=response_extract_path
+        response_extract_path=response_extract_path,
+        unknown_args_behavior=unknown_args_behavior
     )(path)
 
 
@@ -177,14 +219,16 @@ def post(
     form_body: bool = False,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    unknown_args_behavior: Literal['query', 'body', 'not_allow'] = 'body'
 ) -> Callable:
     return rest(
         "POST", 
         form_body=form_body,
         agno_tool=agno_tool, 
         tool_description=tool_description,
-        response_extract_path=response_extract_path
+        response_extract_path=response_extract_path,
+        unknown_args_behavior=unknown_args_behavior
     )(path)
 
 
@@ -193,14 +237,16 @@ def put(
     form_body: bool = False,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    unknown_args_behavior: Literal['query', 'body', 'not_allow'] = 'body'
 ) -> Callable:
     return rest(
         "PUT", 
         form_body=form_body,
         agno_tool=agno_tool, 
         tool_description=tool_description,
-        response_extract_path=response_extract_path
+        response_extract_path=response_extract_path,
+        unknown_args_behavior=unknown_args_behavior
     )(path)
 
 
@@ -209,12 +255,14 @@ def patch(
     form_body: bool = False,
     agno_tool: bool = False,
     tool_description: Optional[str] = None,
-    response_extract_path: Optional[str] = None
+    response_extract_path: Optional[str] = None,
+    unknown_args_behavior: Literal['query', 'body', 'not_allow'] = 'body'
 ) -> Callable:
     return rest(
         "PATCH", 
         form_body=form_body,
         agno_tool=agno_tool, 
         tool_description=tool_description,
-        response_extract_path=response_extract_path
+        response_extract_path=response_extract_path,
+        unknown_args_behavior=unknown_args_behavior
     )(path)
