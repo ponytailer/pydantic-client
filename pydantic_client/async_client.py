@@ -1,5 +1,5 @@
-from typing import Any, Dict, Optional, TypeVar
 import logging
+from typing import Any, Dict, Optional, TypeVar
 
 from pydantic import BaseModel
 
@@ -45,21 +45,7 @@ class AiohttpWebClient(BaseWebClient):
 
         async with self.session.request(**request_params) as response:
             response.raise_for_status()
-
-            if response_model is str:
-                return await response.text()
-            elif response_model is bytes:
-                return await response.content.read()
-            
-            json_data = await response.json()
-            if extract_path:
-                return self._extract_nested_data(json_data, extract_path, response_model)
-            elif not response_model or response_model is dict or getattr(response_model, '__module__', None) == 'inspect':
-                return json_data
-            elif hasattr(response_model, 'model_validate'):
-                return response_model.model_validate(json_data, from_attributes=True)
-            else:
-                return json_data
+            return self._cast_response_to_response_model(await response.content.read(), request_info)
 
 
 class HttpxWebClient(BaseWebClient):
@@ -96,17 +82,4 @@ class HttpxWebClient(BaseWebClient):
             response = await client.request(**request_params)
             response.raise_for_status()
 
-            if response_model is str:
-                return response.text
-            elif response_model is bytes:
-                return response.content
-                
-            json_data = response.json()
-            if extract_path:
-                return self._extract_nested_data(json_data, extract_path, response_model)
-            elif not response_model or response_model is dict or getattr(response_model, '__module__', None) == 'inspect':
-                return json_data
-            elif hasattr(response_model, 'model_validate'):
-                return response_model.model_validate(json_data, from_attributes=True)
-            else:
-                return json_data
+            return self._cast_response_to_response_model(response.content, request_info)
