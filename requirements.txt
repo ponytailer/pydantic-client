@@ -6,7 +6,7 @@ autoflake==2.3.1
 black==25.11.0
 fastapi==0.123.4
 flake8==7.3.0
-isort==7.0.0
+isort==6.1.0
 mypy==1.19.0
 pre-commit==4.5.0
 pytest==9.0.1
