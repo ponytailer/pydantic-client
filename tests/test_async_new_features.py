@@ -43,7 +43,7 @@ async def test_async_pydantic_model_json_body():
             # Verify that the correct parameters are passed
             assert request_info.method == "POST"
             assert request_info.path == "/users"
-            assert request_info.json == {"name": "Test User", "email": "test@example.com"}
+            assert request_info.json_data == {"name": "Test User", "email": "test@example.com"}
             assert request_info.data is None  # Should be None for JSON requests
             
             # Return mock response
@@ -66,7 +66,7 @@ async def test_async_pydantic_model_form_body():
             assert request_info.method == "POST"
             assert request_info.path == "/users"
             assert request_info.data == {"name": "Test User", "email": "test@example.com"}
-            assert request_info.json is None  # Should be None for form requests
+            assert request_info.json_data is None  # Should be None for form requests
             
             # Return mock response
             return {"id": "123", "name": "Test User", "email": "test@example.com"}

@@ -1,12 +1,12 @@
 from typing import Dict, Optional, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RequestInfo(BaseModel):
     method: str
     path: str
     params: Optional[Dict[str, Any]] = {}
-    json: Optional[Dict[str, Any]] = None
+    json_data: Optional[Dict[str, Any]] = Field(default=None, alias='json')
     data: Optional[Dict[str, Any]] = None
     headers: Optional[Dict[str, Any]] = {}
     response_model: Optional[Any] = None
