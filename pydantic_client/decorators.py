@@ -139,7 +139,7 @@ def _process_request_params(
         "function_name": func.__name__,
         "response_extract_path": response_extract_path
     }
-    return RequestInfo.model_validate(info)
+    return RequestInfo.model_validate(info, by_alias=True)
 
 def rest(
     method: str, 

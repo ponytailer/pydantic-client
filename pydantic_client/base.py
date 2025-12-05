@@ -84,7 +84,7 @@ class BaseWebClient(ABC):
         return SpanContext(self, prefix)
     
     def dump_request_params(self, request_info: RequestInfo) -> Dict[str, Any]:
-        request_params = request_info.model_dump()
+        request_params = request_info.model_dump(by_alias=True)
         url = self._make_url(request_params.pop("path"))
         # Merge headers
         request_headers = self.headers.copy()
