@@ -4,7 +4,7 @@ statsd==4.0.1
 pydantic==2.12.5
 autoflake==2.3.1
 black==25.11.0
-fastapi==0.123.4
+fastapi==0.128.0
 flake8==7.3.0
 isort==6.1.0
 mypy==1.19.0
