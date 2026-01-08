@@ -96,8 +96,11 @@ def parse_parameters(parameters):
         name = sanitize_name(p["name"])
         required = p.get("required", False)
         typ = openapi_type_to_py(p.get("schema", {}), {})
-        default = "" if required else " = None"
-        params.append(f"{name}: {typ}{default}")
+        params.append({
+            "name": name,
+            "type": typ,
+            "required": required
+        })
     return params
 
 
@@ -105,10 +108,25 @@ def generate_method(path, method, operation, client_type):
     deco = method_decorator(method)
     summary = operation.get("summary", "")
     parameters = operation.get("parameters", [])
-    param_strs = parse_parameters(parameters)
+    parsed_params = parse_parameters(parameters)
+
     req_model = get_req_model(operation)
     if req_model:
-        param_strs.append(f"{req_model.lower()}: {req_model}")
+        parsed_params.append({
+            "name": req_model.lower(),
+            "type": req_model,
+            "required": True
+        })
+
+    # Sort parameters: required first, then optional
+    parsed_params.sort(key=lambda p: not p["required"])
+
+    # Build parameter strings
+    param_strs = []
+    for p in parsed_params:
+        default = "" if p["required"] else " = None"
+        param_strs.append(f"{p['name']}: {p['type']}{default}")
+
     params = ", ".join(["self"] + param_strs)
     resp_model = get_resp_model(operation)
     async_prefix = "async " if client_type.lower() in ["aiohttp",
