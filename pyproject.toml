@@ -10,6 +10,7 @@ requires-python = ">=3.9"
 homepage = "https://github.com/ponytailer/pydantic-client"
 dependencies = [
     "pydantic>=2.12.5",
+    "pyyaml>=6.0.3",
     "requests",
     "statsd>=4.0.1",
 ]
@@ -34,4 +35,4 @@ source = ["pydantic_client"]
 omit = ["tests/*"]
 
 [project.scripts]
-swagger-cli = "pydantic_client.swagger_cli:main"
+swagger-cli = "pydantic_client.cli:main"
