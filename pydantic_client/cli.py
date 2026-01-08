@@ -7,7 +7,12 @@ import yaml
 
 
 def sanitize_name(name) -> str:
-    return f"{name}_" if keyword.iskeyword(name) else name
+    # Replace hyphens and other non-alphanumeric characters (except underscore) with underscore
+    sanitized = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+    # If it's a Python keyword, add underscore suffix
+    if keyword.iskeyword(sanitized):
+        return f"{sanitized}_"
+    return sanitized
 
 
 def openapi_type_to_py(schema, models):
