@@ -1,7 +1,18 @@
 import argparse
-import yaml
 import json
+import keyword
 import re
+
+import yaml
+
+
+def sanitize_name(name) -> str:
+    # Replace hyphens and other non-alphanumeric characters (except underscore) with underscore
+    sanitized = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+    # If it's a Python keyword, add underscore suffix
+    if keyword.iskeyword(sanitized):
+        return f"{sanitized}_"
+    return sanitized
 
 
 def openapi_type_to_py(schema, models):
@@ -27,9 +38,10 @@ def gen_pydantic_model(name, schema, models):
     required = schema.get("required", [])
     properties = schema.get("properties", {})
     for field, prop in properties.items():
+        sanitized_field = sanitize_name(field)
         typ = openapi_type_to_py(prop, models)
         default = "" if field in required else " = None"
-        fields.append(f"    {field}: {typ}{default}")
+        fields.append(f"    {sanitized_field}: {typ}{default}")
     if not fields:
         fields.append("    pass")
     return f"class {name}(BaseModel):\n" + "\n".join(fields) + "\n"
@@ -74,7 +86,8 @@ def get_resp_model(operation):
             schema = obj.get("schema")
             if schema and "$ref" in schema:
                 return schema["$ref"].split("/")[-1]
-            elif schema and schema.get("type") == "array" and "$ref" in schema["items"]:
+            elif schema and schema.get("type") == "array" and "$ref" in schema[
+                "items"]:
                 # 返回数组
                 return f'List[{schema["items"]["$ref"].split("/")[-1]}]'
     return "Any"
@@ -85,11 +98,14 @@ def parse_parameters(parameters):
     for p in parameters:
         if p.get("in") == "body":
             continue  # 现代 openapi 用 requestBody
-        name = p["name"]
+        name = sanitize_name(p["name"])
         required = p.get("required", False)
         typ = openapi_type_to_py(p.get("schema", {}), {})
-        default = "" if required else " = None"
-        params.append(f"{name}: {typ}{default}")
+        params.append({
+            "name": name,
+            "type": typ,
+            "required": required
+        })
     return params
 
 
@@ -97,13 +113,29 @@ def generate_method(path, method, operation, client_type):
     deco = method_decorator(method)
     summary = operation.get("summary", "")
     parameters = operation.get("parameters", [])
-    param_strs = parse_parameters(parameters)
+    parsed_params = parse_parameters(parameters)
+
     req_model = get_req_model(operation)
     if req_model:
-        param_strs.append(f"{req_model.lower()}: {req_model}")
+        parsed_params.append({
+            "name": req_model.lower(),
+            "type": req_model,
+            "required": True
+        })
+
+    # Sort parameters: required first, then optional
+    parsed_params.sort(key=lambda p: not p["required"])
+
+    # Build parameter strings
+    param_strs = []
+    for p in parsed_params:
+        default = "" if p["required"] else " = None"
+        param_strs.append(f"{p['name']}: {p['type']}{default}")
+
     params = ", ".join(["self"] + param_strs)
     resp_model = get_resp_model(operation)
-    async_prefix = "async " if client_type.lower() in ["aiohttp", "httpx"] else ""
+    async_prefix = "async " if client_type.lower() in ["aiohttp",
+                                                       "httpx"] else ""
     return (
         f"    @{deco}(\"{path}\")\n"
         f"    {async_prefix}def {operation['operationId']}({params}) -> {resp_model}:\n"
@@ -114,9 +146,13 @@ def generate_method(path, method, operation, client_type):
 
 def main():
     parser = argparse.ArgumentParser("swagger-cli")
-    parser.add_argument("-f", "--file", required=True, help="swagger.yaml or openapi.json file")
-    parser.add_argument("-t", "--type", required=True, choices=["requests", "aiohttp", "httpx"], help="Client type")
-    parser.add_argument("-o", "--output", default="generated_client.py", help="Output python file")
+    parser.add_argument("-f", "--file", required=True,
+                        help="swagger.yaml or openapi.json file")
+    parser.add_argument("-t", "--type", required=True,
+                        choices=["requests", "aiohttp", "httpx"],
+                        help="Client type")
+    parser.add_argument("-o", "--output", default="generated_client.py",
+                        help="Output python file")
     args = parser.parse_args()
 
     with open(args.file, "r", encoding="utf-8") as f:
@@ -155,7 +191,12 @@ def main():
     # 3. 写入文件
     with open(args.output, "w", encoding="utf-8") as out:
         out.write("from pydantic import BaseModel\n")
-        out.write("from pydantic_client import get, post, put, patch, delete, RequestsWebClient, AiohttpWebClient, HttpxWebClient\n")
+        out.write(
+            "from pydantic_client import get, post, put, patch, delete\n")
+        if base == "RequestsWebClient":
+            out.write("from pydantic_client import RequestsWebClient\n")
+        else:
+            out.write(f"from pydantic_client.async_client import {base}\n")
         out.write("from typing import Any, List\n\n")
         for m in models.values():
             out.write(m)
