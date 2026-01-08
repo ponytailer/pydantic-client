@@ -146,9 +146,13 @@ def test_parse_parameters():
         {"name": "body", "in": "body"}
     ]
     result = cli.parse_parameters(params)
-    assert "id: str" in result[0]
-    assert "opt: int = None" in result[1]
-    assert all("body" not in p for p in result)
+    assert len(result) == 2  # body parameter should be filtered out
+    assert result[0]["name"] == "id"
+    assert result[0]["type"] == "str"
+    assert result[0]["required"] is True
+    assert result[1]["name"] == "opt"
+    assert result[1]["type"] == "int"
+    assert result[1]["required"] is False
 
 
 def test_generate_method():
@@ -219,9 +223,12 @@ def test_parse_parameters_with_keywords():
     ]
     result = cli.parse_parameters(params)
     assert len(result) == 3
-    assert "id: str" in result[0]
-    assert "import_: str" in result[1]
-    assert "from_: str = None" in result[2]
+    assert result[0]["name"] == "id"
+    assert result[0]["required"] is True
+    assert result[1]["name"] == "import_"
+    assert result[1]["required"] is True
+    assert result[2]["name"] == "from_"
+    assert result[2]["required"] is False
 
 
 def test_cli_generates_client_with_keywords(tmp_path):
@@ -281,3 +288,21 @@ def test_cli_generates_client_with_keywords(tmp_path):
     assert "class_: int = None" in code
     # Check method parameters are sanitized
     assert "def get_doc(self, import_: str, from_: str = None)" in code
+
+
+def test_generate_method_with_parameter_ordering():
+    # Test that required parameters come before optional parameters
+    # regardless of their order in the spec
+    op = {
+        "operationId": "add_assets_to_album",
+        "summary": "Add assets to album",
+        "parameters": [
+            {"name": "key", "in": "query", "required": False, "schema": {"type": "string"}},
+            {"name": "slug", "in": "query", "required": False, "schema": {"type": "string"}},
+            {"name": "bulkidsdto", "in": "query", "required": True, "schema": {"type": "string"}},
+        ],
+        "responses": {"200": {"content": {"application/json": {"schema": {"type": "string"}}}}}
+    }
+    code = cli.generate_method("/albums/{id}/assets", "put", op, "requests")
+    # Required parameter (bulkidsdto) should come before optional ones (key, slug)
+    assert "def add_assets_to_album(self, bulkidsdto: str, key: str = None, slug: str = None)" in code
