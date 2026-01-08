@@ -195,6 +195,22 @@ def test_sanitize_name_with_python_keywords():
     assert cli.sanitize_name("email") == "email"
 
 
+def test_sanitize_name_with_invalid_identifiers():
+    # Test that invalid Python identifiers are sanitized
+    # Hyphens should be replaced with underscores
+    assert cli.sanitize_name("x-immich-checksum") == "x_immich_checksum"
+    assert cli.sanitize_name("user-id") == "user_id"
+    assert cli.sanitize_name("api-key") == "api_key"
+    # Other non-alphanumeric characters should be replaced
+    assert cli.sanitize_name("user.id") == "user_id"
+    assert cli.sanitize_name("user@name") == "user_name"
+    # Combination: invalid chars + keyword
+    assert cli.sanitize_name("x-import") == "x_import"
+    # Underscores should be preserved
+    assert cli.sanitize_name("user_id") == "user_id"
+    assert cli.sanitize_name("user_name") == "user_name"
+
+
 def test_gen_pydantic_model_with_keywords():
     # Test that model fields with Python keywords are sanitized
     schema = {
@@ -306,3 +322,63 @@ def test_generate_method_with_parameter_ordering():
     code = cli.generate_method("/albums/{id}/assets", "put", op, "requests")
     # Required parameter (bulkidsdto) should come before optional ones (key, slug)
     assert "def add_assets_to_album(self, bulkidsdto: str, key: str = None, slug: str = None)" in code
+
+
+def test_cli_generates_client_with_invalid_identifiers(tmp_path):
+    # Test end-to-end CLI with invalid Python identifiers in schema
+    swagger = {
+        "openapi": "3.0.0",
+        "info": {"title": "Test", "version": "1.0"},
+        "paths": {
+            "/upload": {
+                "post": {
+                    "operationId": "upload_asset",
+                    "parameters": [
+                        {"name": "x-immich-checksum", "in": "header", "required": True, "schema": {"type": "string"}},
+                        {"name": "api-key", "in": "header", "required": False, "schema": {"type": "string"}},
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "ok",
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/Asset"}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "components": {
+            "schemas": {
+                "Asset": {
+                    "type": "object",
+                    "required": ["id", "user-id"],
+                    "properties": {
+                        "id": {"type": "string"},
+                        "user-id": {"type": "string"},
+                        "file.name": {"type": "string"},
+                        "x-original-name": {"type": "string"}
+                    }
+                }
+            }
+        }
+    }
+    swagger_file = tmp_path / "swagger_identifiers.yaml"
+    with open(swagger_file, "w") as f:
+        yaml.dump(swagger, f)
+
+    output_file = tmp_path / "client_identifiers.py"
+    result = run_cli(["-f", str(swagger_file), "-t", "requests", "-o", str(output_file)])
+    assert result.returncode == 0
+    assert output_file.exists()
+
+    code = output_file.read_text()
+    # Check BaseModel fields are sanitized
+    assert "id: str" in code
+    assert "user_id: str" in code
+    assert "file_name: str = None" in code
+    assert "x_original_name: str = None" in code
+    # Check method parameters are sanitized
+    assert "def upload_asset(self, x_immich_checksum: str, api_key: str = None)" in code
