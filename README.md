@@ -22,12 +22,6 @@ supporting both synchronous and asynchronous operations.
 - ⚡ **Timing context manager**: Use `with client.span(prefix="myapi"):` to log timing for any API call, sync or async
 - 🌟 **Nested Response Extraction**: Extract and parse deeply nested API responses using JSON path expressions
 
-## TODO
-
-- [ ] support langchain tools
-- [ ] support crewai tools
-
-
 ## Installation
 
 ```bash
@@ -317,6 +311,33 @@ swagger-cli -f openapi.json -t aiohttp -o async_api_client.py
 
 # Generate an httpx client with custom output name
 swagger-cli -f swagger.yaml -t httpx -o http_client.py
+```
+#### CLI Features
+
+The CLI tool automatically handles common OpenAPI/Swagger specification issues:
+
+- **Python Keyword Conflicts**: Parameter/field names that conflict with Python keywords (e.g., `import`, `from`, `class`) are automatically renamed with an underscore suffix (e.g., `import_`, `from_`, `class_`)
+
+- **Invalid Python Identifiers**: Parameter/field names with invalid characters (e.g., hyphens, dots, special characters) are automatically converted to valid Python identifiers using underscores:
+  - `x-immich-checksum` → `x_immich_checksum`
+  - `api-key` → `api_key`
+  - `user.id` → `user_id`
+
+- **Parameter Ordering**: Required parameters (without default values) are automatically placed before optional parameters (with default values), regardless of their order in the OpenAPI specification. This ensures generated code follows Python's syntax rules.
+
+Example generated code:
+```python
+# Original OpenAPI spec with mixed parameter order and invalid identifiers
+@put("/albums/{id}/assets")
+async def add_assets_to_album(
+    self,
+    id: str,
+    bulkidsdto: BulkIdsDto,  # Required - moved before optional params
+    key: str | None = None,  # Optional
+    slug: str | None = None  # Optional
+):
+    """Upload asset"""
+    ...
 ```
 
 ### Timing Context Manager
