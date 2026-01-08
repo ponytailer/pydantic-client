@@ -175,3 +175,109 @@ def test_generate_method():
     code3 = cli.generate_method("/user", "post", op2, "requests")
     assert "user: User" in code3
     assert "def create_user" in code3
+
+
+def test_sanitize_name_with_python_keywords():
+    # Test that Python keywords are sanitized
+    assert cli.sanitize_name("import") == "import_"
+    assert cli.sanitize_name("from") == "from_"
+    assert cli.sanitize_name("class") == "class_"
+    assert cli.sanitize_name("def") == "def_"
+    assert cli.sanitize_name("return") == "return_"
+    assert cli.sanitize_name("lambda") == "lambda_"
+    # Non-keywords should remain unchanged
+    assert cli.sanitize_name("id") == "id"
+    assert cli.sanitize_name("name") == "name"
+    assert cli.sanitize_name("email") == "email"
+
+
+def test_gen_pydantic_model_with_keywords():
+    # Test that model fields with Python keywords are sanitized
+    schema = {
+        "type": "object",
+        "required": ["id", "import"],
+        "properties": {
+            "id": {"type": "string"},
+            "import": {"type": "string"},
+            "from": {"type": "string"},
+            "class": {"type": "integer"}
+        }
+    }
+    code = cli.gen_pydantic_model("Doc", schema, {})
+    assert "id: str" in code
+    assert "import_: str" in code
+    assert "from_: str = None" in code
+    assert "class_: int = None" in code
+
+
+def test_parse_parameters_with_keywords():
+    # Test that parameters with Python keywords are sanitized
+    params = [
+        {"name": "id", "in": "query", "required": True, "schema": {"type": "string"}},
+        {"name": "import", "in": "query", "required": True, "schema": {"type": "string"}},
+        {"name": "from", "in": "query", "required": False, "schema": {"type": "string"}},
+    ]
+    result = cli.parse_parameters(params)
+    assert len(result) == 3
+    assert "id: str" in result[0]
+    assert "import_: str" in result[1]
+    assert "from_: str = None" in result[2]
+
+
+def test_cli_generates_client_with_keywords(tmp_path):
+    # Test end-to-end CLI with Python keywords in schema
+    swagger = {
+        "openapi": "3.0.0",
+        "info": {"title": "Test", "version": "1.0"},
+        "paths": {
+            "/doc": {
+                "get": {
+                    "operationId": "get_doc",
+                    "parameters": [
+                        {"name": "import", "in": "query", "required": True, "schema": {"type": "string"}},
+                        {"name": "from", "in": "query", "required": False, "schema": {"type": "string"}},
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "ok",
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/Doc"}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "components": {
+            "schemas": {
+                "Doc": {
+                    "type": "object",
+                    "required": ["id", "import"],
+                    "properties": {
+                        "id": {"type": "string"},
+                        "import": {"type": "string"},
+                        "from": {"type": "string"},
+                        "class": {"type": "integer"}
+                    }
+                }
+            }
+        }
+    }
+    swagger_file = tmp_path / "swagger_keywords.yaml"
+    with open(swagger_file, "w") as f:
+        yaml.dump(swagger, f)
+
+    output_file = tmp_path / "client_with_keywords.py"
+    result = run_cli(["-f", str(swagger_file), "-t", "requests", "-o", str(output_file)])
+    assert result.returncode == 0
+    assert output_file.exists()
+
+    code = output_file.read_text()
+    # Check BaseModel fields are sanitized
+    assert "import_: str" in code
+    assert "from_: str = None" in code
+    assert "class_: int = None" in code
+    # Check method parameters are sanitized
+    assert "def get_doc(self, import_: str, from_: str = None)" in code
