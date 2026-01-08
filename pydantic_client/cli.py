@@ -192,7 +192,11 @@ def main():
     with open(args.output, "w", encoding="utf-8") as out:
         out.write("from pydantic import BaseModel\n")
         out.write(
-            "from pydantic_client import get, post, put, patch, delete, RequestsWebClient, AiohttpWebClient, HttpxWebClient\n")
+            "from pydantic_client import get, post, put, patch, delete\n")
+        if base == "RequestsWebClient":
+            out.write("from pydantic_client import RequestsWebClient\n")
+        else:
+            out.write(f"from pydantic_client.async_client import {base}\n")
         out.write("from typing import Any, List\n\n")
         for m in models.values():
             out.write(m)
