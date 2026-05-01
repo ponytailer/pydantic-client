@@ -1,7 +1,7 @@
 -e .
 
 statsd==4.0.1
-pydantic==2.12.5
+pydantic==2.13.3
 autoflake==2.3.1
 black==25.11.0
 fastapi==0.128.0
