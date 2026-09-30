@@ -14,7 +14,7 @@ supporting both synchronous and asynchronous operations.
 ## Features
 
 - 🔥 **Type-safe**: Full type hints with Pydantic models for request/response validation
-- 🚀 **Multiple HTTP backends**: Choose from `requests`, `aiohttp`, or `httpx`
+- 🚀 **Multiple HTTP backends**: Choose from `requests`, `aiohttp`, or `httpx2`
 - ⚡ **Async/Sync support**: Work with both synchronous and asynchronous HTTP operations
 - 🎯 **Decorator-based API**: Clean, intuitive API definition with decorators
 - 📝 **CLI tools**: Command-line interface for automatic client generation from OpenAPI/Swagger specs
