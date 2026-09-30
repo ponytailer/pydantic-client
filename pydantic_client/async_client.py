@@ -60,9 +60,9 @@ class HttpxWebClient(BaseWebClient):
     ):
         super().__init__(base_url, headers, timeout, session, statsd_address)
         try:
-            import httpx
+            import httpx2
         except ImportError:
-            raise ImportError("please install httpx: `pip install httpx`")
+            raise ImportError("please install httpx: `pip install httpx2`")
 
     async def _request(self, request_info: RequestInfo) -> Any:
         # Check if there's a mock response for this method
@@ -71,14 +71,14 @@ class HttpxWebClient(BaseWebClient):
             return mock_response
             
         # No mock data, continue with the normal request
-        import httpx
+        import httpx2
         request_params = self.dump_request_params(request_info)
         response_model = request_params.pop("response_model")
         extract_path = request_params.pop("response_extract_path", None)  # Get response extraction path parameter
 
         request_params = self.before_request(request_params)
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx2.AsyncClient(timeout=self.timeout) as client:
             response = await client.request(**request_params)
             response.raise_for_status()
 

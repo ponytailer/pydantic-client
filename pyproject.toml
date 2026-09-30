@@ -16,9 +16,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-httpx = ["httpx[http2]"]
+httpx = ["httpx2"]
 aiohttp = ["aiohttp"]
-all = ["httpx[http2]", "aiohttp"]
+all = ["httpx2", "aiohttp"]
 
 [build-system]
 requires = ["hatchling"]
